@@ -1,13 +1,14 @@
-import type { Flight } from '@/lib/services/flightApi'
+
 import { Card } from '@/components/atoms/Card'
 import { Title, Text, Label } from '@/components/atoms/Typography'
-
+import type { Flight } from '@/types/flight'
 interface FlightCardProps {
     flight: Flight
     type?: 'outbound' | 'return'
 }
 
 export function FlightCard({ flight, type }: FlightCardProps) {
+    console.log(flight, type)
     const formatTime = (dateString: string) => {
         const date = new Date(dateString);
         return date.toLocaleTimeString('en-US', {

@@ -43,3 +43,43 @@ export enum SeatClassType {
     BUSINESS = 'Business',
     FIRST = 'First'
 }
+
+export interface Flight {
+    id: string;
+    flightNumber: string;
+    origin: Airport;
+    destination: Airport;
+    departureAirport: string;
+    arrivalAirport: string;
+    departureTime: string;
+    arrivalTime: string;
+    price: number;
+    airline: string;
+    availableSeats: number;
+    cabinClass: CabinClass;
+    seatClass: SeatClassType;
+}
+
+export interface FlightSearchParams {
+    tripType: TripType;
+    origin: string;
+    destination: string;
+    departureDate: string;
+    returnDate?: string;
+    seatClass: SeatClassType;
+    passengers: {
+        adults: number;
+        children: number;
+        infants: number;
+    };
+}
+
+export interface Booking {
+    id: string;
+    flightId: string;
+    userId: string;
+    passengers: number;
+    totalPrice: number;
+    status: 'pending' | 'confirmed' | 'cancelled';
+    createdAt: string;
+}

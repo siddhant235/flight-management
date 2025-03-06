@@ -8,6 +8,8 @@ import {
     BaseQueryFn,
     EndpointBuilder
 } from '@reduxjs/toolkit/query/react'
+import { ApiTagTypes } from './constants/apiTags'
+import { createClient } from './supabase/client'
 
 export interface ApiError {
     status: number
@@ -18,19 +20,24 @@ export interface ApiError {
     }
 }
 
-export type TagTypes = 'Flights' | 'Auth' | 'User' | 'Bookings'
-
 // Custom error handling for the base query
 const baseQueryWithErrorHandling: BaseQueryFn<
     string | FetchArgs,
     unknown,
     FetchBaseQueryError
 > = async (args, api, extraOptions) => {
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+
     const baseQuery = fetchBaseQuery({
         baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
         credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
+        prepareHeaders: (headers) => {
+            if (session?.access_token) {
+                headers.set('Authorization', `Bearer ${session.access_token}`)
+            }
+            headers.set('Content-Type', 'application/json')
+            return headers
         },
     })
 
@@ -62,16 +69,13 @@ export const baseApi = createApi({
     reducerPath: 'api',
     baseQuery: baseQueryWithErrorHandling,
     endpoints: () => ({}),
-    tagTypes: ['Flights', 'Auth', 'User', 'Bookings'],
+    tagTypes: Object.values(ApiTagTypes),
 })
 
 export type ApiEndpointBuilder = EndpointBuilder<
     typeof baseQueryWithErrorHandling,
-    TagTypes,
+    ApiTagTypes,
     typeof baseApi.reducerPath
 >
 
-// Export hooks for usage in components
-export const {
-    util: { getRunningQueriesThunk },
-} = baseApi
+export const { util: { getRunningQueriesThunk } } = baseApi

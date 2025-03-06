@@ -1,4 +1,4 @@
-import type { Flight } from '@/lib/services/flightApi'
+import type { Flight } from '@/types/flight'
 import { FlightCard } from '../molecules/FlightCard'
 import { Title } from '@/components/atoms/Typography'
 
