@@ -1,43 +1,48 @@
+import { FlightCard } from '@/components/molecules/FlightCard'
 import type { Flight } from '@/types/flight'
-import { FlightCard } from '../molecules/FlightCard'
-import { Title } from '@/components/atoms/Typography'
+import { useSelector } from 'react-redux'
+import { RootState } from '@/lib/store'
+import { TripType } from '@/types/flight'
 
 interface FlightGridProps {
     outboundFlights: Flight[]
-    returnFlights?: Flight[]
+    returnFlights: Flight[]
 }
 
 export function FlightGrid({ outboundFlights, returnFlights }: FlightGridProps) {
-    const isRoundTrip = returnFlights && returnFlights.length > 0;
+    const searchParams = useSelector((state: RootState) => state.search.searchParams)
+    const isRoundTrip = searchParams.tripType === TripType.ROUND_TRIP
 
-    if (isRoundTrip) {
-        return (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div>
-                    <Title className="text-xl mb-4">Outbound Flights</Title>
-                    <div className="space-y-4">
-                        {outboundFlights.map((flight) => (
-                            <FlightCard key={flight.id} flight={flight} type="outbound" />
-                        ))}
-                    </div>
-                </div>
-                <div>
-                    <Title className="text-xl mb-4">Return Flights</Title>
-                    <div className="space-y-4">
-                        {returnFlights.map((flight) => (
-                            <FlightCard key={flight.id} flight={flight} type="return" />
-                        ))}
-                    </div>
+    console.log(outboundFlights)
+    console.log(returnFlights, isRoundTrip)
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h3 className="text-xl font-semibold mb-4">Outbound Flights</h3>
+                <div className="space-y-4">
+                    {outboundFlights.map((flight) => (
+                        <FlightCard
+                            key={flight.id}
+                            flight={flight}
+                            type="outbound"
+                        />
+                    ))}
                 </div>
             </div>
-        );
-    }
-
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {outboundFlights.map((flight) => (
-                <FlightCard key={flight.id} flight={flight} />
-            ))}
+            {isRoundTrip && (
+                <div>
+                    <h3 className="text-xl font-semibold mb-4">Return Flights</h3>
+                    <div className="space-y-4">
+                        {returnFlights.map((flight) => (
+                            <FlightCard
+                                key={flight.id}
+                                flight={flight}
+                                type="return"
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
-    );
+    )
 }

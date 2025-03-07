@@ -21,7 +21,7 @@ export interface FlightSearchFormData {
     origin: string
     destination: string
     departureDate: string
-    returnDate?: string
+    returnDate: string
     seatClass: SeatClassType
     passengers: {
         adults: number

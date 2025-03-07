@@ -7,7 +7,6 @@ import { transformFlightData, DatabaseFlight } from '@/lib/mappers/flightMapper'
 export async function POST(request: Request) {
     try {
         const searchParams: FlightSearchFormData = await request.json();
-        console.log('Search params:', searchParams);
 
         // Extract the weekday from the provided departure date
         const departureDay = new Date(searchParams.departureDate).toLocaleString('en-US', { weekday: 'long' });
@@ -31,8 +30,6 @@ export async function POST(request: Request) {
                 { status: 400 }
             );
         }
-        console.log('Selected seat class:', selectedSeatClass, departureDay);
-
         // Query for outbound flights
         const query = supabase
             .from('flights')
@@ -99,7 +96,6 @@ export async function POST(request: Request) {
         }
 
         if (!outboundFlights || outboundFlights.length === 0) {
-            console.log('No outbound flights found');
             return NextResponse.json(
                 { error: 'No flights found for the selected route, date, and seat class' },
                 { status: 404 }
@@ -112,8 +108,6 @@ export async function POST(request: Request) {
             outboundFlights: transformFlightData(outboundFlights as unknown as DatabaseFlight[], searchParams.seatClass as SeatClassType, selectedSeatClass),
             returnFlights: transformFlightData(returnFlights as unknown as DatabaseFlight[] | null, searchParams.seatClass as SeatClassType, selectedSeatClass)
         };
-
-        console.log('Response:', response);
         return NextResponse.json(response);
     } catch (error) {
         console.error('Unexpected error:', error);

@@ -46,6 +46,7 @@ export function FlightSearchForm({ onSearch }: FlightSearchFormProps) {
     })
 
     const tripType = watch('tripType')
+    const departureDate = watch('departureDate')
 
     const onSubmitForm = handleSubmit((data) => {
         onSearch(data)
@@ -116,6 +117,7 @@ export function FlightSearchForm({ onSearch }: FlightSearchFormProps) {
                                 type="date"
                                 label="Return Date"
                                 error={errors.returnDate?.message}
+                                min={departureDate}
                                 {...register('returnDate')}
                             />
                         </div>

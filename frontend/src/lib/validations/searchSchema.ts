@@ -12,13 +12,7 @@ export const searchSchema = z.object({
         .refine((date) => new Date(date) >= today, {
             message: 'Departure date cannot be in the past'
         }),
-    returnDate: z.string().optional()
-        .refine((date) => {
-            if (!date) return true
-            return new Date(date) >= today
-        }, {
-            message: 'Return date cannot be in the past'
-        }),
+    returnDate: z.string(),
     seatClass: z.nativeEnum(SeatClassType, {
         errorMap: () => ({ message: 'Please select a seat class' })
     }),
@@ -48,11 +42,14 @@ export const searchSchema = z.object({
     message: 'Origin and destination cannot be the same',
     path: ['destination']
 }).refine((data) => {
-    if (data.tripType === TripType.ROUND_TRIP && data.returnDate) {
-        return new Date(data.returnDate) >= new Date(data.departureDate)
+    if (data.tripType === TripType.ROUND_TRIP) {
+        if (!data.returnDate) {
+            return false;
+        }
+        return new Date(data.returnDate) >= new Date(data.departureDate);
     }
-    return true
+    return true;
 }, {
-    message: 'Return date must be after departure date',
+    message: 'Return date is required for round trips and must be after departure date',
     path: ['returnDate']
 })

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { PaymentMethod } from '@/types/profile';
+import type { PaymentMethod } from '@/types/payment';
 import { Input } from '../molecules/Input';
 import { Button } from '../molecules/Button';
 
@@ -46,7 +46,6 @@ export function PaymentMethods({
         register,
         handleSubmit,
         reset,
-        setValue,
         formState: { errors },
     } = useForm<PaymentMethodFormData>({
         resolver: zodResolver(paymentMethodSchema),
@@ -70,24 +69,6 @@ export function PaymentMethods({
         }
     };
 
-    const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/\D/g, '');
-        const formattedValue = value.replace(/(\d{4})/g, '$1 ').trim();
-        e.target.value = formattedValue;
-        setValue('card_number', value, { shouldValidate: true });
-    };
-
-    const handleExpiryDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/\D/g, '');
-        if (value.length >= 2) {
-            const formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}`;
-            e.target.value = formattedValue;
-        } else {
-            e.target.value = value;
-        }
-        setValue('expiry_date', e.target.value, { shouldValidate: true });
-    };
-
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -107,7 +88,6 @@ export function PaymentMethods({
                         label="Card Number"
                         {...register('card_number')}
                         error={errors.card_number?.message}
-                        onChange={handleCardNumberChange}
                         maxLength={19}
                         placeholder="1234 5678 9012 3456"
                         disabled={isLoading}
@@ -125,7 +105,6 @@ export function PaymentMethods({
                         label="Expiry Date"
                         {...register('expiry_date')}
                         error={errors.expiry_date?.message}
-                        onChange={handleExpiryDateChange}
                         maxLength={5}
                         placeholder="MM/YY"
                         disabled={isLoading}

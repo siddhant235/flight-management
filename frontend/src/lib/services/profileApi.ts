@@ -1,6 +1,7 @@
 import { baseApi, ApiEndpointBuilder } from '../baseApi';
 import { ApiTagTypes } from '../constants/apiTags';
-import type { Profile, UpdateProfileData, PaymentMethod } from '@/types/profile';
+import type { Profile, UpdateProfileData } from '@/types/profile';
+import type { PaymentMethod } from '@/types/payment';
 
 export const profileApi = baseApi.injectEndpoints({
     endpoints: (builder: ApiEndpointBuilder) => ({

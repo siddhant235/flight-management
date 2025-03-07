@@ -11,7 +11,7 @@ const searchSchema = z.object({
     origin: z.string().min(1, 'Origin is required'),
     destination: z.string().min(1, 'Destination is required'),
     departureDate: z.string().min(1, 'Departure date is required'),
-    returnDate: z.string().optional(),
+    returnDate: z.string(),
     passengers: z.object({
         adults: z.number().min(1, 'At least one adult is required'),
         children: z.number().min(0),

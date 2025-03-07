@@ -16,7 +16,6 @@ export async function GET() {
             .select('*')
             .eq('id', user.id)
             .single();
-        console.log(profile, error);
         if (error) {
             // If profile doesn't exist, create one with basic info
             if (error.code === 'PGRST116') {

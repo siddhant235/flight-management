@@ -1,14 +1,30 @@
-
 import { Card } from '@/components/atoms/Card'
 import { Title, Text, Label } from '@/components/atoms/Typography'
 import type { Flight } from '@/types/flight'
+import { useSelector, useDispatch } from 'react-redux'
+import { RootState } from '@/lib/store'
+import { setOutboundFlight, setReturnFlight } from '@/lib/features/selectedFlightsSlice'
+
 interface FlightCardProps {
     flight: Flight
-    type?: 'outbound' | 'return'
+    type: 'outbound' | 'return'
 }
 
 export function FlightCard({ flight, type }: FlightCardProps) {
-    console.log(flight, type)
+    const dispatch = useDispatch();
+    const selectedFlights = useSelector((state: RootState) => state.selectedFlights);
+    const isSelected = type === 'outbound'
+        ? selectedFlights.outboundFlight?.id === flight.id
+        : selectedFlights.returnFlight?.id === flight.id;
+
+    const handleSelect = () => {
+        if (type === 'outbound') {
+            dispatch(setOutboundFlight(flight));
+        } else {
+            dispatch(setReturnFlight(flight));
+        }
+    };
+
     const formatTime = (dateString: string) => {
         const date = new Date(dateString);
         return date.toLocaleTimeString('en-US', {
@@ -19,17 +35,29 @@ export function FlightCard({ flight, type }: FlightCardProps) {
     };
 
     return (
-        <Card className={type ? `border-l-4 ${type === 'outbound' ? 'border-l-blue-500' : 'border-l-green-500'}` : ''}>
+        <Card
+            className={`cursor-pointer transition-all relative ${isSelected
+                    ? 'border-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 shadow-lg'
+                    : 'hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-md'
+                }`}
+            onClick={handleSelect}
+        >
+            {isSelected && (
+                <div className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
+                    ✓
+                </div>
+            )}
             <div className="flex justify-between items-start mb-4">
                 <div>
                     <Title className="text-lg">{flight.airline}</Title>
                     <Text className="text-sm text-gray-600 dark:text-gray-400">{flight.flightNumber}</Text>
                 </div>
-                {type && (
-                    <Text className="text-sm font-medium px-2 py-1 rounded bg-gray-100 dark:bg-gray-800">
-                        {type === 'outbound' ? 'Outbound' : 'Return'}
-                    </Text>
-                )}
+                <Text className={`text-sm font-medium px-2 py-1 rounded ${isSelected
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200'
+                        : 'bg-gray-100 dark:bg-gray-800'
+                    }`}>
+                    {type === 'outbound' ? 'Outbound' : 'Return'}
+                </Text>
             </div>
 
             <div className="space-y-3">
@@ -54,12 +82,15 @@ export function FlightCard({ flight, type }: FlightCardProps) {
                     </div>
                     <div className="text-right">
                         <Label className="block text-sm">Price</Label>
-                        <Text className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                        <Text className={`text-lg font-bold ${isSelected
+                                ? 'text-blue-600 dark:text-blue-400'
+                                : 'text-gray-900 dark:text-gray-100'
+                            }`}>
                             ₹{flight.price.toLocaleString()}
                         </Text>
                     </div>
                 </div>
             </div>
         </Card>
-    )
+    );
 }

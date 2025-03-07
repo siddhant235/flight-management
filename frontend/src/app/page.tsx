@@ -1,6 +1,5 @@
 'use client'
 
-
 import { Spinner } from '@/components/atoms/Spinner'
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { FlightGrid } from '@/components/organisms/FlightGrid'
@@ -9,12 +8,25 @@ import { FlightSearchForm } from '@/components/organisms/FlightSearchForm'
 import { useSearchFlightsMutation } from '@/lib/services/flightApi'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import type { FlightSearchFormData } from '@/types/flight'
+import { BookingSummary } from '@/components/molecules/BookingSummary'
+import { useRouter } from 'next/navigation'
+import { useDispatch } from 'react-redux'
+import { clearSelectedFlights } from '@/lib/features/selectedFlightsSlice'
+import { updateSearchParams } from '@/lib/features/searchSlice'
 
 export default function ScanFlightsPage() {
+  const router = useRouter()
+  const dispatch = useDispatch()
   const [searchFlights, { data: searchResults, isLoading, error: searchError }] = useSearchFlightsMutation()
 
   const handleSearch = (formData: FlightSearchFormData) => {
+    dispatch(clearSelectedFlights())
+    dispatch(updateSearchParams(formData))
     searchFlights(formData)
+  }
+
+  const handleBook = () => {
+    router.push('/booking')
   }
 
   const getErrorMessage = (error: FetchBaseQueryError | undefined) => {
@@ -28,7 +40,7 @@ export default function ScanFlightsPage() {
   const errorMessage = getErrorMessage(searchError as FetchBaseQueryError)
 
   return (
-    <main className="container mx-auto px-4 py-8 min-h-screen dark:bg-gray-900">
+    <main className="container mx-auto px-4 py-8 min-h-screen dark:bg-gray-900 pb-24">
       <div className="max-w-7xl mx-auto">
         <Title className="text-3xl mb-6">Search Flights</Title>
         <FlightSearchForm onSearch={handleSearch} />
@@ -54,6 +66,8 @@ export default function ScanFlightsPage() {
             />
           </div>
         )}
+
+        <BookingSummary onBook={handleBook} />
       </div>
     </main>
   )

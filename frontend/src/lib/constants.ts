@@ -5,9 +5,10 @@ export const defaultProfile: Profile = {
     full_name: '',
     email: '',
     age: undefined,
-    phone: undefined,
-    address: undefined,
+    phone: '',
+    address: '',
     gender: undefined,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    payment_methods: [],
 }; 

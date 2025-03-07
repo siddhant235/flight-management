@@ -65,7 +65,6 @@ export const searchService = {
         if (passengerError) throw new Error(passengerError)
 
         // TODO: Implement actual API call
-        console.log('Searching flights with:', searchData)
         return searchData
     }
 }

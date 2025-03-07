@@ -7,9 +7,10 @@ import { ProfileForm } from '@/components/organisms/ProfileForm';
 import { PaymentMethods } from '@/components/organisms/PaymentMethods';
 import { useGetProfileQuery, useUpdateProfileMutation } from '@/lib/services/profileApi';
 import { defaultProfile } from '@/lib/constants';
-import type { Profile, PaymentMethod } from '@/types/profile';
+import type { Profile } from '@/types/profile';
 import type { RootState } from '@/lib/store';
 import type { PaymentMethodFormData } from '@/components/organisms/PaymentMethods';
+import type { PaymentMethod } from '@/types/payment';
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -36,22 +37,18 @@ export default function ProfilePage() {
 
     const handleAddPaymentMethod = async (data: PaymentMethodFormData) => {
         try {
-            const response = await fetch('/api/payment-methods', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
+            const newPaymentMethod: PaymentMethod = {
+                id: crypto.randomUUID(),
+                type: 'credit_card' as const,
+                card_number: data.card_number,
+                card_holder_name: data.card_holder_name,
+                expiry_date: data.expiry_date,
+                is_default: data.is_default
+            };
 
-            if (!response.ok) {
-                throw new Error('Failed to add payment method');
-            }
-
-            const newPaymentMethod = await response.json();
             await updateProfile({
                 ...profile,
-                payment_methods: [...(profile.payment_methods || []), newPaymentMethod],
+                payment_methods: [...(profile.payment_methods || []), newPaymentMethod]
             }).unwrap();
         } catch (error) {
             console.error('Failed to add payment method:', error);
@@ -61,21 +58,9 @@ export default function ProfilePage() {
 
     const handleDeletePaymentMethod = async (id: string) => {
         try {
-            const response = await fetch('/api/payment-methods', {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ id }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to delete payment method');
-            }
-
             await updateProfile({
                 ...profile,
-                payment_methods: (profile.payment_methods || []).filter((method: PaymentMethod) => method.id !== id),
+                payment_methods: (profile.payment_methods || []).filter(method => method.id !== id)
             }).unwrap();
         } catch (error) {
             console.error('Failed to delete payment method:', error);
@@ -85,24 +70,12 @@ export default function ProfilePage() {
 
     const handleSetDefaultPaymentMethod = async (id: string) => {
         try {
-            const response = await fetch('/api/payment-methods', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ id, is_default: true }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to set default payment method');
-            }
-
             await updateProfile({
                 ...profile,
-                payment_methods: (profile.payment_methods || []).map((method: PaymentMethod) => ({
+                payment_methods: (profile.payment_methods || []).map(method => ({
                     ...method,
-                    is_default: method.id === id,
-                })),
+                    is_default: method.id === id
+                }))
             }).unwrap();
         } catch (error) {
             console.error('Failed to set default payment method:', error);

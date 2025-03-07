@@ -16,7 +16,6 @@ export async function GET() {
             .order('city', { ascending: true });
 
         if (error) {
-            console.error('Supabase error:', error);
             return NextResponse.json(
                 { error: 'Failed to fetch airports' },
                 { status: 500 }
