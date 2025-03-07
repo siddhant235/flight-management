@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { Spinner } from '@/components/atoms/Spinner'
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { FlightGrid } from '@/components/organisms/FlightGrid'
@@ -9,24 +10,61 @@ import { useSearchFlightsMutation } from '@/lib/services/flightApi'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import type { FlightSearchFormData } from '@/types/flight'
 import { BookingSummary } from '@/components/molecules/BookingSummary'
-import { useRouter } from 'next/navigation'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { clearSelectedFlights } from '@/lib/features/selectedFlightsSlice'
-import { updateSearchParams } from '@/lib/features/searchSlice'
+import { updateSearchParams, selectIsSearching, selectSearchParams } from '@/lib/features/searchSlice'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect } from 'react'
+import { TripType, SeatClassType } from '@/types/flight'
 
-export default function ScanFlightsPage() {
+function HomeContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const dispatch = useDispatch()
-  const [searchFlights, { data: searchResults, isLoading, error: searchError }] = useSearchFlightsMutation()
+  const [searchFlights, { data: searchResults, error: searchError }] = useSearchFlightsMutation()
+  const isSearching = useSelector(selectIsSearching)
+  const currentSearchParams = useSelector(selectSearchParams)
+
+  // Initialize search params from URL on page load
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    const formData: Partial<FlightSearchFormData> = {
+      tripType: (params.get('tripType') as TripType) || TripType.ROUND_TRIP,
+      origin: params.get('origin') || '',
+      destination: params.get('destination') || '',
+      departureDate: params.get('departureDate') || '',
+      returnDate: params.get('returnDate') || '',
+      seatClass: (params.get('seatClass') as SeatClassType) || SeatClassType.ECONOMY,
+      passengers: {
+        adults: parseInt(params.get('adults') || '1'),
+        children: parseInt(params.get('children') || '0'),
+        infants: parseInt(params.get('infants') || '0'),
+      }
+    }
+    dispatch(updateSearchParams(formData))
+  }, [dispatch, searchParams])
 
   const handleSearch = (formData: FlightSearchFormData) => {
     dispatch(clearSelectedFlights())
     dispatch(updateSearchParams(formData))
     searchFlights(formData)
-  }
 
-  const handleBook = () => {
-    router.push('/booking')
+    // Update URL with search parameters
+    const params = new URLSearchParams()
+    params.set('tripType', formData.tripType)
+    params.set('origin', formData.origin)
+    params.set('destination', formData.destination)
+    params.set('departureDate', formData.departureDate)
+    if (formData.returnDate) {
+      params.set('returnDate', formData.returnDate)
+    }
+    params.set('seatClass', formData.seatClass)
+    params.set('adults', formData.passengers.adults.toString())
+    params.set('children', formData.passengers.children.toString())
+    params.set('infants', formData.passengers.infants.toString())
+
+    // Update URL without triggering a page reload
+    router.push(`?${params.toString()}`, { scroll: false })
   }
 
   const getErrorMessage = (error: FetchBaseQueryError | undefined) => {
@@ -43,9 +81,12 @@ export default function ScanFlightsPage() {
     <main className="container mx-auto px-4 py-8 min-h-screen dark:bg-gray-900 pb-24">
       <div className="max-w-7xl mx-auto">
         <Title className="text-3xl mb-6">Search Flights</Title>
-        <FlightSearchForm onSearch={handleSearch} />
+        <FlightSearchForm
+          onSearch={handleSearch}
+          initialData={currentSearchParams}
+        />
 
-        {isLoading && (
+        {isSearching && (
           <div className="flex justify-center items-center py-12">
             <Spinner />
           </div>
@@ -67,8 +108,20 @@ export default function ScanFlightsPage() {
           </div>
         )}
 
-        <BookingSummary onBook={handleBook} />
+        <BookingSummary />
       </div>
     </main>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen">
+        <Spinner />
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   )
 }

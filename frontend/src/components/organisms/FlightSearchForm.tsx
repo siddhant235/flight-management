@@ -18,9 +18,10 @@ const SEAT_CLASS_OPTIONS = Object.values(SeatClassType).map(value => ({
 
 interface FlightSearchFormProps {
     onSearch: (data: FlightSearchFormData) => void
+    initialData?: FlightSearchFormData
 }
 
-export function FlightSearchForm({ onSearch }: FlightSearchFormProps) {
+export function FlightSearchForm({ onSearch, initialData }: FlightSearchFormProps) {
     const {
         register,
         handleSubmit,
@@ -30,7 +31,7 @@ export function FlightSearchForm({ onSearch }: FlightSearchFormProps) {
         trigger
     } = useForm<FlightSearchFormData>({
         resolver: zodResolver(searchSchema),
-        defaultValues: {
+        defaultValues: initialData || {
             tripType: TripType.ROUND_TRIP,
             origin: '',
             destination: '',

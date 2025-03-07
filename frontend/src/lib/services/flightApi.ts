@@ -22,7 +22,6 @@ export const flightApi = baseApi.injectEndpoints({
         }),
         getFlightById: builder.query<Flight, string>({
             query: (id) => `api/flights/${id}`,
-            providesTags: (result, error, id) => [{ type: ApiTagTypes.FLIGHTS, id }],
         }),
         bookFlight: builder.mutation<Booking, { flightId: string; passengers: number }>({
             query: (data) => ({

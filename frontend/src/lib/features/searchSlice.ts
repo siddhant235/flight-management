@@ -60,7 +60,22 @@ const searchSlice = createSlice({
     initialState,
     reducers: {
         updateSearchParams: (state, action: PayloadAction<Partial<FlightSearchFormData>>) => {
-            state.searchParams = { ...state.searchParams, ...action.payload }
+            // Deep merge for nested objects
+            if (action.payload.passengers) {
+                state.searchParams.passengers = {
+                    ...state.searchParams.passengers,
+                    ...action.payload.passengers
+                }
+            }
+
+            // Update other fields
+            if (action.payload.tripType) state.searchParams.tripType = action.payload.tripType
+            if (action.payload.origin) state.searchParams.origin = action.payload.origin
+            if (action.payload.destination) state.searchParams.destination = action.payload.destination
+            if (action.payload.departureDate) state.searchParams.departureDate = action.payload.departureDate
+            if (action.payload.returnDate) state.searchParams.returnDate = action.payload.returnDate
+            if (action.payload.seatClass) state.searchParams.seatClass = action.payload.seatClass
+
             state.error = null
         },
         setSearchError: (state, action: PayloadAction<string>) => {
