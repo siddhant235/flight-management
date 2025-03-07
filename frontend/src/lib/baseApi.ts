@@ -30,7 +30,7 @@ const baseQueryWithErrorHandling: BaseQueryFn<
     const { data: { session } } = await supabase.auth.getSession()
 
     const baseQuery = fetchBaseQuery({
-        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+        baseUrl: typeof window !== 'undefined' ? window.location.origin : '',
         credentials: 'include',
         prepareHeaders: (headers) => {
             if (session?.access_token) {
