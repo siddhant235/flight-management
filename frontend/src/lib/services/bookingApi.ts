@@ -1,21 +1,21 @@
-import { baseApi } from '../baseApi'
-import type { CreateBookingRequest, CreateBookingResponse } from '@/types/booking'
-import { ApiTagTypes } from '../constants/apiTags'
+import { baseApi, ApiEndpointBuilder } from '../baseApi';
+import { ApiTagTypes } from '../constants/apiTags';
+import type { Booking, CreateBookingRequest } from '@/types/booking';
 
 export const bookingApi = baseApi.injectEndpoints({
-    endpoints: (builder) => ({
-        createBooking: builder.mutation<CreateBookingResponse, CreateBookingRequest>({
-            query: (bookingData) => ({
-                url: '/api/bookings',
+    endpoints: (builder: ApiEndpointBuilder) => ({
+        createBooking: builder.mutation<{ message: string; bookingReference: string; booking: Booking }, CreateBookingRequest>({
+            query: (body) => ({
+                url: 'api/bookings/confirm',
                 method: 'POST',
-                body: bookingData,
+                body,
             }),
-            invalidatesTags: [
-                ApiTagTypes.FLIGHTS,
-                ApiTagTypes.BOOKINGS,
-            ],
+            invalidatesTags: [ApiTagTypes.BOOKINGS],
         }),
+        // Add other booking-related queries here
     }),
-})
+});
 
-export const { useCreateBookingMutation } = bookingApi 
+export const {
+    useCreateBookingMutation,
+} = bookingApi; 

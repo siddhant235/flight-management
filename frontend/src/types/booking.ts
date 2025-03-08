@@ -6,9 +6,9 @@ export interface Passenger {
     firstName: string
     lastName: string
     age: number
+    gender: Gender
     email: string
     phone: string
-    gender: Gender
 }
 
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED'
@@ -16,30 +16,36 @@ export type PaymentMethod = 'CREDIT_CARD' | 'PAYPAL' | 'UPI' | 'BANK_TRANSFER'
 
 export interface Booking {
     id: string
-    flightId: string
-    userId: string
-    bookingReference: string
-    bookingStatus: BookingStatus
-    paymentMethod: PaymentMethod
-    totalAmount: number
-    createdAt: string
+    flight_id: string
+    user_id: string
+    booking_reference: string
+    booking_status: BookingStatus
+    payment_method: string
+    total_amount: number
+    created_at: string
 }
 
 export interface BookingPassenger {
     id: string
-    bookingId: string
-    passengerId: string
-    seatClass: SeatClassType
-    seatNumber: string
-    createdAt: string
+    booking_id: string
+    passenger_id: string
+    seat_class: SeatClassType
+    seat_number: string
+    created_at: string
 }
 
 export interface CreateBookingRequest {
-    flightId: string
+    outboundFlight: {
+        flightId: string
+        seatClass: SeatClassType
+    }
+    returnFlight?: {
+        flightId: string
+        seatClass: SeatClassType
+    }
     passengers: Omit<Passenger, 'id'>[]
     paymentMethodId: string
     totalAmount: number
-    seatClass: SeatClassType
 }
 
 export interface CreateBookingResponse {

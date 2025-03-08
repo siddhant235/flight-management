@@ -30,7 +30,7 @@ const baseQueryWithErrorHandling: BaseQueryFn<
     const { data: { session } } = await supabase.auth.getSession()
 
     const baseQuery = fetchBaseQuery({
-        baseUrl: typeof window !== 'undefined' ? window.location.origin : '',
+        baseUrl: '/',
         credentials: 'include',
         prepareHeaders: (headers) => {
             if (session?.access_token) {

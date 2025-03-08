@@ -16,6 +16,7 @@ import { Spinner } from '@/components/atoms/Spinner'
 import { skipToken } from '@reduxjs/toolkit/query'
 import { SeatClassType } from '@/types/flight'
 import { CURRENCY } from '@/lib/constants/currency'
+import { toast, Toaster } from 'sonner'
 
 function BookingContent() {
     const router = useRouter()
@@ -105,14 +106,19 @@ function BookingContent() {
         }
     }
 
-    const handlePaymentSelect = async (id: string) => {
-        try {
-            if (!profile) return;
+    const handlePaymentSelect = (id: string) => {
+        setSelectedPaymentMethodId(id);
+    }
 
+    const handleContinueToConfirm = async () => {
+        try {
+            if (!profile || !selectedPaymentMethodId) return;
+
+            // Update default payment method in profile when continuing to next step
             const paymentMethods = profile.payment_methods || [];
             const updatedPaymentMethods = paymentMethods.map(method => ({
                 ...method,
-                is_default: method.id === id
+                is_default: method.id === selectedPaymentMethodId
             }));
 
             await updateProfile({
@@ -120,7 +126,6 @@ function BookingContent() {
                 payment_methods: updatedPaymentMethods
             }).unwrap();
 
-            setSelectedPaymentMethodId(id);
             setStep('confirm');
         } catch (error) {
             console.error('Failed to set default payment method:', error);
@@ -131,19 +136,38 @@ function BookingContent() {
         if (passengerData.some(p => p === undefined) || !selectedPaymentMethodId || !flights) return
 
         try {
-            const totalAmount = flights.price +
-                (returnFlight ? returnFlight.price : 0)
-            await createBooking({
-                flightId: flights.id,
+            const totalAmount = (flights.price + (returnFlight ? returnFlight.price : 0)) * passengerData.length;
+            const response = await createBooking({
+                outboundFlight: {
+                    flightId: flights.id,
+                    seatClass: searchFormData.seatClass
+                },
+                returnFlight: returnFlight ? {
+                    flightId: returnFlight.id,
+                    seatClass: searchFormData.seatClass
+                } : undefined,
                 passengers: passengerData.filter((p): p is Omit<Passenger, 'id'> => p !== undefined),
                 paymentMethodId: selectedPaymentMethodId,
                 totalAmount,
-                seatClass: searchFormData.seatClass
             }).unwrap()
 
-            router.push('/bookings')
-        } catch (error) {
+            toast.success('Booking confirmed successfully!', {
+                description: `Booking reference: ${response.bookingReference}`
+            })
+
+            // Redirect to bookings page after a short delay
+            setTimeout(() => {
+                router.push('/bookings')
+            }, 2000)
+        } catch (error: unknown) {
             console.error('Booking failed:', error)
+            const errorMessage = error && typeof error === 'object' && 'data' in error
+                ? (error.data as { message?: string })?.message
+                : 'Please try again later'
+
+            toast.error('Failed to confirm booking', {
+                description: errorMessage
+            })
         }
     }
 
@@ -198,8 +222,13 @@ function BookingContent() {
                             <p className="text-sm text-gray-500">Class: {searchFormData.seatClass}</p>
                         </div>
                         <div className="text-right">
+                            <p className="text-sm text-gray-500">Per passenger</p>
                             <p className="font-medium">
                                 {CURRENCY.symbol}{flights.price.toFixed(2)}
+                            </p>
+                            <p className="text-sm text-gray-500">Total for {passengerData.length} passengers</p>
+                            <p className="font-bold text-lg">
+                                {CURRENCY.symbol}{(flights.price * passengerData.length).toFixed(2)}
                             </p>
                         </div>
                     </div>
@@ -220,8 +249,13 @@ function BookingContent() {
                                 <p className="text-sm text-gray-500">Class: {searchFormData.seatClass}</p>
                             </div>
                             <div className="text-right">
+                                <p className="text-sm text-gray-500">Per passenger</p>
                                 <p className="font-medium">
                                     {CURRENCY.symbol}{returnFlight.price.toFixed(2)}
+                                </p>
+                                <p className="text-sm text-gray-500">Total for {passengerData.length} passengers</p>
+                                <p className="font-bold text-lg">
+                                    {CURRENCY.symbol}{(returnFlight.price * passengerData.length).toFixed(2)}
                                 </p>
                             </div>
                         </div>
@@ -231,6 +265,19 @@ function BookingContent() {
                         </div>
                     </div>
                 )}
+
+                {/* Add Grand Total Display */}
+                <div className="border-t pt-4 mt-4">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <p className="text-lg font-semibold">Grand Total</p>
+                            <p className="text-sm text-gray-500">For {passengerData.length} passengers</p>
+                        </div>
+                        <p className="text-2xl font-bold text-blue-600">
+                            {CURRENCY.symbol}{((flights.price + (returnFlight ? returnFlight.price : 0)) * passengerData.length).toFixed(2)}
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {step === 'passenger' && (
@@ -269,11 +316,32 @@ function BookingContent() {
                 <>
                     <div className="space-y-4">
                         <h2 className="text-xl font-semibold">Select Payment Method</h2>
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <p className="text-gray-600 dark:text-gray-400">Price per passenger</p>
+                                    <p className="font-medium">{CURRENCY.symbol}{(flights.price + (returnFlight ? returnFlight.price : 0)).toFixed(2)}</p>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <p className="text-gray-600 dark:text-gray-400">Number of passengers</p>
+                                    <p className="font-medium">× {passengerData.length}</p>
+                                </div>
+                                <div className="border-t border-blue-200 dark:border-blue-800 pt-2 mt-2">
+                                    <div className="flex justify-between items-center">
+                                        <p className="font-semibold">Total Amount</p>
+                                        <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                                            {CURRENCY.symbol}{((flights.price + (returnFlight ? returnFlight.price : 0)) * passengerData.length).toFixed(2)}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <PaymentMethods
                             paymentMethods={profile?.payment_methods || []}
                             onAdd={handleAddPaymentMethod}
                             onDelete={handleDeletePaymentMethod}
                             onSetDefault={handlePaymentSelect}
+                            selectedPaymentMethodId={selectedPaymentMethodId}
                         />
                     </div>
                     <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
@@ -286,7 +354,7 @@ function BookingContent() {
                                 Back to Passengers
                             </Button>
                             <Button
-                                onClick={() => setStep('confirm')}
+                                onClick={handleContinueToConfirm}
                                 disabled={!selectedPaymentMethodId}
                                 className="w-1/2"
                             >
@@ -332,12 +400,47 @@ function BookingContent() {
                             </div>
 
                             <div>
+                                <h3 className="font-medium">Payment Summary</h3>
+                                <div className="mt-2 space-y-2">
+                                    <div className="flex justify-between">
+                                        <p>Outbound Flight ({passengerData.length} x {CURRENCY.symbol}{flights.price.toFixed(2)})</p>
+                                        <p>{CURRENCY.symbol}{(flights.price * passengerData.length).toFixed(2)}</p>
+                                    </div>
+                                    {returnFlight && (
+                                        <div className="flex justify-between">
+                                            <p>Return Flight ({passengerData.length} x {CURRENCY.symbol}{returnFlight.price.toFixed(2)})</p>
+                                            <p>{CURRENCY.symbol}{(returnFlight.price * passengerData.length).toFixed(2)}</p>
+                                        </div>
+                                    )}
+                                    <div className="border-t pt-2 mt-2">
+                                        <div className="flex justify-between font-bold">
+                                            <p>Total Amount</p>
+                                            <p className="text-blue-600">
+                                                {CURRENCY.symbol}{((flights.price + (returnFlight ? returnFlight.price : 0)) * passengerData.length).toFixed(2)}
+                                            </p>
+                                        </div>
+                                        <p className="text-sm text-gray-500 mt-1">Total for {passengerData.length} passengers</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
                                 <h3 className="font-medium">Payment Method</h3>
-                                <p>
-                                    {profile?.payment_methods.find(
-                                        (pm: { id: string; card_number: string }) => pm.id === selectedPaymentMethodId
-                                    )?.card_number.slice(-4)}
-                                </p>
+                                {profile?.payment_methods.find(
+                                    (pm: { id: string; card_number: string; card_holder_name: string }) =>
+                                        pm.id === selectedPaymentMethodId
+                                ) && (
+                                        <div className="mt-2">
+                                            <p className="font-medium">
+                                                {profile.payment_methods.find(pm => pm.id === selectedPaymentMethodId)?.card_holder_name}
+                                            </p>
+                                            <p className="text-gray-600">
+                                                **** **** **** {profile.payment_methods.find(
+                                                    pm => pm.id === selectedPaymentMethodId
+                                                )?.card_number.slice(-4)}
+                                            </p>
+                                        </div>
+                                    )}
                             </div>
                         </div>
                     </div>
@@ -373,6 +476,7 @@ export default function BookingPage() {
             </div>
         }>
             <BookingContent />
+            <Toaster richColors position="top-center" />
         </Suspense>
     )
 } 

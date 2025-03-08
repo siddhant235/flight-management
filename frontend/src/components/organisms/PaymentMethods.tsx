@@ -29,7 +29,8 @@ interface PaymentMethodsProps {
     paymentMethods: PaymentMethod[];
     onAdd: (data: PaymentMethodFormData) => Promise<void>;
     onDelete: (id: string) => Promise<void>;
-    onSetDefault: (id: string) => Promise<void>;
+    onSetDefault: (id: string) => void;
+    selectedPaymentMethodId?: string | null;
 }
 
 export function PaymentMethods({
@@ -37,6 +38,7 @@ export function PaymentMethods({
     onAdd,
     onDelete,
     onSetDefault,
+    selectedPaymentMethodId
 }: PaymentMethodsProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -142,13 +144,13 @@ export function PaymentMethods({
                 {paymentMethods.map((method) => (
                     <div
                         key={method.id}
-                        className={`flex items-center justify-between border rounded-lg p-4 cursor-pointer transition-all hover:border-blue-500 dark:hover:border-blue-400 ${method.is_default ? 'border-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'hover:shadow-md'}`}
+                        className={`flex items-center justify-between border rounded-lg p-4 cursor-pointer transition-all hover:border-blue-500 dark:hover:border-blue-400 ${method.id === selectedPaymentMethodId ? 'border-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'hover:shadow-md'}`}
                         onClick={() => onSetDefault(method.id)}
                     >
                         <div className="flex items-center space-x-4">
                             <input
                                 type="radio"
-                                checked={method.is_default}
+                                checked={method.id === selectedPaymentMethodId}
                                 onChange={() => onSetDefault(method.id)}
                                 className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                             />
