@@ -1,6 +1,6 @@
 import { baseApi, ApiEndpointBuilder } from '../baseApi'
 import { ApiTagTypes } from '../constants/apiTags'
-import type { Flight, FlightSearchParams, Booking } from '@/types/flight'
+import type { Flight, FlightSearchParams, Booking, SeatClassType } from '@/types/flight'
 
 interface SearchResponse {
     outboundFlights: Flight[];
@@ -20,8 +20,8 @@ export const flightApi = baseApi.injectEndpoints({
                 body: params,
             }),
         }),
-        getFlightById: builder.query<Flight, string>({
-            query: (id) => `api/flights/${id}`,
+        getFlightById: builder.query<Flight, { id: string, seatClass: SeatClassType }>({
+            query: ({ id, seatClass }) => `api/flights/${id}?seatClass=${seatClass}`,
         }),
         bookFlight: builder.mutation<Booking, { flightId: string; passengers: number }>({
             query: (data) => ({

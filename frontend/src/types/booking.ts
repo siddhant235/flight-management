@@ -2,7 +2,7 @@ export interface Passenger {
     id: string
     firstName: string
     lastName: string
-    age: string
+    age: number
     email: string
     phone: string
     gender?: 'male' | 'female' | 'other'

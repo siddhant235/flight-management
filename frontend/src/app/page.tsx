@@ -24,7 +24,7 @@ function HomeContent() {
   const [searchFlights, { data: searchResults, error: searchError }] = useSearchFlightsMutation()
   const isSearching = useSelector(selectIsSearching)
   const currentSearchParams = useSelector(selectSearchParams)
-
+  console.log(searchResults, "SEARCH RESULTS")
   // Initialize search params from URL on page load
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString())

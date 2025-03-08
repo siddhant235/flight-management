@@ -105,9 +105,10 @@ export async function POST(request: Request) {
         console.log(`Found ${outboundFlights.length} matching outbound flights`);
 
         const response = {
-            outboundFlights: transformFlightData(outboundFlights as unknown as DatabaseFlight[], searchParams.seatClass as SeatClassType, selectedSeatClass),
-            returnFlights: transformFlightData(returnFlights as unknown as DatabaseFlight[] | null, searchParams.seatClass as SeatClassType, selectedSeatClass)
+            outboundFlights: transformFlightData(outboundFlights as unknown as DatabaseFlight[]),
+            returnFlights: transformFlightData(returnFlights as unknown as DatabaseFlight[])
         };
+        console.log(response, "RESPONSE")
         return NextResponse.json(response);
     } catch (error) {
         console.error('Unexpected error:', error);

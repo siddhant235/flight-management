@@ -30,7 +30,7 @@ export function BookingSummary() {
             if (returnFlight) {
                 flights.push(returnFlight.id);
             }
-            router.push(`/book?flights=${flights.join(',')}`);
+            router.push(`/book?flights=${flights.join(',')}&seatClass=${searchParams.seatClass}`);
         }
     }
 

@@ -12,9 +12,7 @@ interface FlightGridProps {
 export function FlightGrid({ outboundFlights, returnFlights }: FlightGridProps) {
     const searchParams = useSelector((state: RootState) => state.search.searchParams)
     const isRoundTrip = searchParams.tripType === TripType.ROUND_TRIP
-
-    console.log(outboundFlights)
-    console.log(returnFlights, isRoundTrip)
+    console.log(outboundFlights, "OUTBOUNF")
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
