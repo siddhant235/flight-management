@@ -20,7 +20,6 @@ export default function ProfilePage() {
         skip: !user,
     });
     const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
-
     useEffect(() => {
         if (!user && !authLoading) {
             router.push('/login');

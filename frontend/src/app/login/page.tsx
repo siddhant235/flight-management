@@ -18,6 +18,8 @@ export default function LoginPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log('email', email);
+        console.log('password', password);
         const result = await dispatch(signIn({ email, password }));
 
         if (signIn.fulfilled.match(result)) {

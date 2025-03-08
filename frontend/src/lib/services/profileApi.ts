@@ -7,7 +7,8 @@ export const profileApi = baseApi.injectEndpoints({
     endpoints: (builder: ApiEndpointBuilder) => ({
         getProfile: builder.query<Profile, void>({
             query: () => 'api/profile',
-            providesTags: [ApiTagTypes.PROFILE],
+            providesTags: [ApiTagTypes.PROFILE, ApiTagTypes.AUTH],
+            keepUnusedDataFor: 0,
         }),
         updateProfile: builder.mutation<Profile, UpdateProfileData>({
             query: (data) => ({
@@ -15,7 +16,7 @@ export const profileApi = baseApi.injectEndpoints({
                 method: 'PUT',
                 body: data,
             }),
-            invalidatesTags: [ApiTagTypes.PROFILE],
+            invalidatesTags: [ApiTagTypes.PROFILE, ApiTagTypes.AUTH],
         }),
         addPaymentMethod: builder.mutation<PaymentMethod, Omit<PaymentMethod, 'id' | 'user_id' | 'created_at' | 'updated_at'>>({
             query: (data) => ({
