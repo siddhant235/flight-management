@@ -88,7 +88,7 @@ export function FlightSearchForm({ onSearch, initialData }: FlightSearchFormProp
                             label="From"
                             value={watch('origin')}
                             onChange={(value) => setValue('origin', value, { shouldValidate: true })}
-                            excludeAirport={watch('destination')}
+                            // excludeAirport={watch('destination')}
                             error={errors.origin?.message}
                         />
                     </div>
@@ -97,7 +97,7 @@ export function FlightSearchForm({ onSearch, initialData }: FlightSearchFormProp
                             label="To"
                             value={watch('destination')}
                             onChange={(value) => setValue('destination', value, { shouldValidate: true })}
-                            excludeAirport={watch('origin')}
+                            // excludeAirport={watch('origin')}
                             error={errors.destination?.message}
                         />
                     </div>

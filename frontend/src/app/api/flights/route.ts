@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
     try {
-        console.log('Fetching flights from Supabase...');
         const { data, error } = await supabase
             .from('flights')
             .select('*')
@@ -18,14 +17,11 @@ export async function GET() {
         }
 
         if (!data || data.length === 0) {
-            console.log('No flights found');
             return NextResponse.json(
                 { error: 'No flights found' },
                 { status: 404 }
             );
         }
-
-        console.log(`Successfully fetched ${data.length} flights`);
         return NextResponse.json(data);
     } catch (error) {
         console.error('Unexpected error:', error);

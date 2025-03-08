@@ -31,7 +31,6 @@ export async function POST(request: Request) {
             );
         }
         // Query for outbound flights
-        console.log("Search Params", selectedSeatClass);
         const query = supabase
             .from('flights')
             .select(`
@@ -81,7 +80,6 @@ export async function POST(request: Request) {
                 .eq('status', 'RUNNING')
                 .order('departure_time', { ascending: true });
         }
-        console.log("Query", query);
         // Execute queries simultaneously
         const [{ data: outboundFlights, error: outboundError }, { data: returnFlights }] = await Promise.all([
             query,
@@ -102,9 +100,6 @@ export async function POST(request: Request) {
                 { status: 404 }
             );
         }
-
-        console.log(`Found ${outboundFlights.length} matching outbound flights`);
-
         const response = {
             outboundFlights: transformFlightData(outboundFlights as unknown as DatabaseFlight[], searchParams.seatClass),
             returnFlights: returnFlights ? transformFlightData(returnFlights as unknown as DatabaseFlight[], searchParams.seatClass) : []

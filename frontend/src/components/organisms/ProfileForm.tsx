@@ -38,7 +38,6 @@ export const ProfileForm = ({ profile, onSubmit, isLoading = false }: ProfileFor
             gender: profile.gender,
         },
     });
-
     const handleFormSubmit = async (data: ProfileFormData) => {
         try {
             await onSubmit(data);
@@ -87,6 +86,13 @@ export const ProfileForm = ({ profile, onSubmit, isLoading = false }: ProfileFor
                             </p>
                         )}
                     </div>
+                    <Input
+                        label="Phone"
+                        placeholder="+1234567890"
+                        {...register('phone')}
+                        error={errors.phone?.message}
+                        disabled={isLoading}
+                    />
                     <Input
                         label="Address"
                         {...register('address')}

@@ -28,7 +28,6 @@ function BookingContent() {
         Array(searchFormData.passengers.adults + searchFormData.passengers.children + searchFormData.passengers.infants).fill(undefined)
     )
     const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string | null>(null)
-    console.log("Search form data", searchFormData)
     const { data: profile, isLoading: isLoadingProfile } = useGetProfileQuery()
     const { data: flights, isLoading: isLoadingFlights } = useGetFlightByIdQuery({
         id: flightIds[0],
@@ -210,7 +209,6 @@ function BookingContent() {
                     </div>
                 </div>
             </div>
-            {/* {console.log(flights)} */}
             <div className="space-y-4">
                 <div className="border rounded-lg p-4 space-y-2">
                     <h2 className="text-xl font-semibold">Outbound Flight</h2>

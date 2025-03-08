@@ -30,6 +30,7 @@ interface PaymentMethodsProps {
     onAdd: (data: PaymentMethodFormData) => Promise<void>;
     onDelete: (id: string) => Promise<void>;
     onSetDefault: (id: string) => void;
+    onEdit?: (id: string, data: PaymentMethodFormData) => Promise<void>;
     selectedPaymentMethodId?: string | null;
 }
 
@@ -38,17 +39,20 @@ export function PaymentMethods({
     onAdd,
     onDelete,
     onSetDefault,
+    onEdit,
     selectedPaymentMethodId
 }: PaymentMethodsProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
 
     const {
         register,
         handleSubmit,
         reset,
         formState: { errors },
+        setValue
     } = useForm<PaymentMethodFormData>({
         resolver: zodResolver(paymentMethodSchema),
         defaultValues: {
@@ -60,28 +64,52 @@ export function PaymentMethods({
         try {
             setIsLoading(true);
             setError(null);
-            await onAdd(data);
+
+            if (editingId && onEdit) {
+                await onEdit(editingId, data);
+                setEditingId(null);
+            } else {
+                await onAdd(data);
+            }
+
             reset();
             setShowAddForm(false);
         } catch (err) {
-            console.error('Payment method creation error:', err);
-            setError('Failed to add payment method');
+            console.error('Payment method operation error:', err);
+            setError('Failed to process payment method');
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleEdit = (method: PaymentMethod) => {
+        setEditingId(method.id);
+        setShowAddForm(true);
+        setValue('card_number', method.card_number);
+        setValue('card_holder_name', method.card_holder_name);
+        setValue('expiry_date', method.expiry_date);
+        setValue('is_default', method.is_default);
+    };
+
+    const handleCancel = () => {
+        setShowAddForm(false);
+        setEditingId(null);
+        reset();
     };
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Payment Methods</h2>
-                <Button
-                    type="button"
-                    onClick={() => setShowAddForm(!showAddForm)}
-                    variant="secondary"
-                >
-                    {showAddForm ? 'Cancel' : 'Add Payment Method'}
-                </Button>
+                {!showAddForm && (
+                    <Button
+                        type="button"
+                        onClick={() => setShowAddForm(true)}
+                        variant="secondary"
+                    >
+                        Add Payment Method
+                    </Button>
+                )}
             </div>
 
             {showAddForm && (
@@ -130,13 +158,24 @@ export function PaymentMethods({
                         </div>
                     )}
 
-                    <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? 'Adding...' : 'Add Payment Method'}
-                    </Button>
+                    <div className="flex gap-4">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            className="w-full"
+                            onClick={handleCancel}
+                            disabled={isLoading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? (editingId ? 'Updating...' : 'Adding...') : (editingId ? 'Update Payment Method' : 'Add Payment Method')}
+                        </Button>
+                    </div>
                 </form>
             )}
 
@@ -144,16 +183,18 @@ export function PaymentMethods({
                 {paymentMethods.map((method) => (
                     <div
                         key={method.id}
-                        className={`flex items-center justify-between border rounded-lg p-4 cursor-pointer transition-all hover:border-blue-500 dark:hover:border-blue-400 ${method.id === selectedPaymentMethodId ? 'border-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'hover:shadow-md'}`}
-                        onClick={() => onSetDefault(method.id)}
+                        className={`flex items-center justify-between border rounded-lg p-4 ${selectedPaymentMethodId !== undefined ? 'cursor-pointer transition-all hover:border-blue-500 dark:hover:border-blue-400' : ''} ${method.id === selectedPaymentMethodId ? 'border-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20' : selectedPaymentMethodId !== undefined ? 'hover:shadow-md' : ''}`}
+                        onClick={() => selectedPaymentMethodId !== undefined && onSetDefault(method.id)}
                     >
                         <div className="flex items-center space-x-4">
-                            <input
-                                type="radio"
-                                checked={method.id === selectedPaymentMethodId}
-                                onChange={() => onSetDefault(method.id)}
-                                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                            />
+                            {selectedPaymentMethodId !== undefined && (
+                                <input
+                                    type="radio"
+                                    checked={method.id === selectedPaymentMethodId}
+                                    onChange={() => onSetDefault(method.id)}
+                                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                />
+                            )}
                             <div>
                                 <div className="font-medium">
                                     {method.card_holder_name}
@@ -167,16 +208,30 @@ export function PaymentMethods({
                             </div>
                         </div>
 
-                        <Button
-                            type="button"
-                            variant="danger"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete(method.id);
-                            }}
-                        >
-                            Delete
-                        </Button>
+                        <div className="flex gap-2">
+                            {onEdit && (
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEdit(method);
+                                    }}
+                                >
+                                    Edit
+                                </Button>
+                            )}
+                            <Button
+                                type="button"
+                                variant="danger"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(method.id);
+                                }}
+                            >
+                                Delete
+                            </Button>
+                        </div>
                     </div>
                 ))}
 

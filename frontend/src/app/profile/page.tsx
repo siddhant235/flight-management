@@ -11,6 +11,7 @@ import type { Profile } from '@/types/profile';
 import type { RootState } from '@/lib/store';
 import type { PaymentMethodFormData } from '@/components/organisms/PaymentMethods';
 import type { PaymentMethod } from '@/types/payment';
+import { toast, Toaster } from 'sonner';
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -28,9 +29,20 @@ export default function ProfilePage() {
 
     const handleProfileUpdate = async (data: Partial<Profile>) => {
         try {
-            await updateProfile(data as Profile).unwrap();
+            await updateProfile({
+                ...profile,
+                ...data,
+                payment_methods: profile.payment_methods || []
+            }).unwrap();
+            toast.success('Profile updated successfully');
         } catch (error) {
             console.error('Profile update error:', error);
+            const errorMessage = error && typeof error === 'object' && 'data' in error
+                ? (error.data as { message?: string })?.message
+                : 'Please try again later';
+            toast.error('Failed to update profile', {
+                description: errorMessage
+            });
             throw error;
         }
     };
@@ -83,6 +95,32 @@ export default function ProfilePage() {
         }
     };
 
+    const handleEditPaymentMethod = async (id: string, data: PaymentMethodFormData) => {
+        try {
+            const updatedPaymentMethods = (profile.payment_methods || []).map(method =>
+                method.id === id
+                    ? {
+                        ...method,
+                        card_number: data.card_number,
+                        card_holder_name: data.card_holder_name,
+                        expiry_date: data.expiry_date,
+                        is_default: data.is_default
+                    }
+                    : method
+            );
+
+            await updateProfile({
+                ...profile,
+                payment_methods: updatedPaymentMethods
+            }).unwrap();
+            toast.success('Payment method updated successfully');
+        } catch (error) {
+            console.error('Failed to edit payment method:', error);
+            toast.error('Failed to update payment method');
+            throw error;
+        }
+    };
+
     if (authLoading || profileLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -122,11 +160,13 @@ export default function ProfilePage() {
                                 onAdd={handleAddPaymentMethod}
                                 onDelete={handleDeletePaymentMethod}
                                 onSetDefault={handleSetDefaultPaymentMethod}
+                                onEdit={handleEditPaymentMethod}
                             />
                         </div>
                     </div>
                 </div>
             </div>
+            <Toaster richColors position="top-center" />
         </div>
     );
 }

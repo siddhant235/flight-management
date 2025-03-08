@@ -3,11 +3,16 @@ import { FlightSearchFormData, TripType, SeatClassType } from '@/types/flight'
 import { searchService } from '@/lib/services/searchService'
 import type { RootState } from '@/lib/store'
 import { flightApi } from '@/lib/services/flightApi'
+import type { Flight } from '@/types/flight'
 
 interface SearchState {
     searchParams: FlightSearchFormData
     isSearching: boolean
     error: string | null
+    searchResults: {
+        outboundFlights: Flight[]
+        returnFlights: Flight[]
+    } | null
 }
 
 const initialState: SearchState = {
@@ -26,6 +31,7 @@ const initialState: SearchState = {
     },
     isSearching: false,
     error: null,
+    searchResults: null
 }
 
 export const searchFlights = createAsyncThunk(
@@ -78,8 +84,17 @@ const searchSlice = createSlice({
 
             state.error = null
         },
+        setSearchResults: (state, action: PayloadAction<{ outboundFlights: Flight[], returnFlights: Flight[] }>) => {
+            state.searchResults = action.payload
+            state.isSearching = false
+            state.error = null
+        },
         setSearchError: (state, action: PayloadAction<string>) => {
             state.error = action.payload
+            state.isSearching = false
+        },
+        setIsSearching: (state, action: PayloadAction<boolean>) => {
+            state.isSearching = action.payload
         },
         resetSearch: (state) => {
             state.searchParams = initialState.searchParams
@@ -109,6 +124,15 @@ const searchSlice = createSlice({
 export const selectSearchParams = (state: RootState) => state.search.searchParams
 export const selectIsSearching = (state: RootState) => state.search.isSearching
 export const selectSearchError = (state: RootState) => state.search.error
+export const selectSearchResults = (state: RootState) => state.search.searchResults
 
-export const { updateSearchParams, setSearchError, resetSearch, clearError } = searchSlice.actions
+export const {
+    updateSearchParams,
+    setSearchResults,
+    setSearchError,
+    setIsSearching,
+    resetSearch,
+    clearError
+} = searchSlice.actions
+
 export default searchSlice.reducer

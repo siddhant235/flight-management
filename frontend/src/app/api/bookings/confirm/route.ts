@@ -106,7 +106,6 @@ async function createBookingPassengers(supabase: SupabaseClient, bookingId: stri
             seat_number: `${flight.seatClass.charAt(0)}${Math.floor(Math.random() * 30) + 1}`,
         }))
     );
-    console.log("Booking Passengers Data", bookingPassengersData, passengers);
     const { error: bookingPassengersError } = await supabase
         .from("booking_passengers")
         .insert(bookingPassengersData);
@@ -200,7 +199,6 @@ export async function POST(request: Request) {
 
         // Step 6: Process passengers concurrently
         const passengerIds = await processPassengers(supabase, passengers);
-        console.log("BOOKINGS", bookings);
         // Step 7: Create booking passengers for each booking
         await Promise.all(
             bookings.map(booking =>

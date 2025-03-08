@@ -23,6 +23,8 @@ export function FlightGrid({ outboundFlights, returnFlights }: FlightGridProps) 
                             key={flight.id}
                             flight={flight}
                             type="outbound"
+                            departureDate={searchParams.departureDate}
+                            arrivalDate={searchParams.departureDate}
                         />
                     ))}
                 </div>
@@ -36,6 +38,8 @@ export function FlightGrid({ outboundFlights, returnFlights }: FlightGridProps) 
                                 key={flight.id}
                                 flight={flight}
                                 type="return"
+                                departureDate={searchParams.returnDate}
+                                arrivalDate={searchParams.returnDate}
                             />
                         ))}
                     </div>
