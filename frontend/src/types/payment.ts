@@ -1,6 +1,6 @@
 export interface PaymentMethod {
     id: string;
-    type: 'credit_card' | 'debit_card';
+    type: 'CREDIT_CARD' | 'DEBIT_CARD';
     card_number: string;
     card_holder_name: string;
     expiry_date: string;

@@ -5,10 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { CollapsiblePassengerForm } from '@/components/organisms/CollapsiblePassengerForm'
 import { PaymentMethods } from '@/components/organisms/PaymentMethods'
 import { useCreateBookingMutation } from '@/lib/services/bookingApi'
-import { useGetProfileQuery } from '@/lib/services/profileApi'
+import { useGetProfileQuery, useUpdateProfileMutation } from '@/lib/services/profileApi'
 import { useGetFlightByIdQuery } from '@/lib/services/flightApi'
 import { Button } from '@/components/molecules/Button'
 import type { Passenger } from '@/types/booking'
+import type { PaymentMethodFormData } from '@/types/payment'
 import { useSelector } from 'react-redux'
 import { selectSearchParams } from '@/lib/features/searchSlice'
 import { Spinner } from '@/components/atoms/Spinner'
@@ -39,6 +40,7 @@ function BookingContent() {
         } : skipToken
     )
     const [createBooking, { isLoading: isCreatingBooking }] = useCreateBookingMutation()
+    const [updateProfile] = useUpdateProfileMutation()
 
     const handlePassengerSubmit = (data: Omit<Passenger, 'id'>, index: number) => {
         const newPassengerData = [...passengerData]
@@ -58,9 +60,71 @@ function BookingContent() {
         }
     }
 
-    const handlePaymentSelect = async (paymentMethodId: string) => {
-        setSelectedPaymentMethodId(paymentMethodId)
-        setStep('confirm')
+    const handleAddPaymentMethod = async (data: PaymentMethodFormData) => {
+        try {
+            if (!profile) return;
+
+            const paymentMethods = profile.payment_methods || [];
+            const newPaymentMethod = {
+                id: crypto.randomUUID(),
+                type: 'CREDIT_CARD' as const,
+                card_number: data.card_number,
+                card_holder_name: data.card_holder_name,
+                expiry_date: data.expiry_date,
+                is_default: data.is_default
+            };
+
+            await updateProfile({
+                ...profile,
+                payment_methods: [...paymentMethods, newPaymentMethod]
+            }).unwrap();
+        } catch (error) {
+            console.error('Failed to add payment method:', error);
+            throw error;
+        }
+    }
+
+    const handleDeletePaymentMethod = async (id: string) => {
+        try {
+            if (!profile) return;
+
+            const paymentMethods = profile.payment_methods || [];
+            const updatedPaymentMethods = paymentMethods.filter(method => method.id !== id);
+
+            await updateProfile({
+                ...profile,
+                payment_methods: updatedPaymentMethods
+            }).unwrap();
+
+            if (selectedPaymentMethodId === id) {
+                setSelectedPaymentMethodId(null);
+            }
+        } catch (error) {
+            console.error('Failed to delete payment method:', error);
+            throw error;
+        }
+    }
+
+    const handlePaymentSelect = async (id: string) => {
+        try {
+            if (!profile) return;
+
+            const paymentMethods = profile.payment_methods || [];
+            const updatedPaymentMethods = paymentMethods.map(method => ({
+                ...method,
+                is_default: method.id === id
+            }));
+
+            await updateProfile({
+                ...profile,
+                payment_methods: updatedPaymentMethods
+            }).unwrap();
+
+            setSelectedPaymentMethodId(id);
+            setStep('confirm');
+        } catch (error) {
+            console.error('Failed to set default payment method:', error);
+        }
     }
 
     const handleConfirmBooking = async () => {
@@ -74,6 +138,7 @@ function BookingContent() {
                 passengers: passengerData.filter((p): p is Omit<Passenger, 'id'> => p !== undefined),
                 paymentMethodId: selectedPaymentMethodId,
                 totalAmount,
+                seatClass: searchFormData.seatClass
             }).unwrap()
 
             router.push('/bookings')
@@ -206,8 +271,8 @@ function BookingContent() {
                         <h2 className="text-xl font-semibold">Select Payment Method</h2>
                         <PaymentMethods
                             paymentMethods={profile?.payment_methods || []}
-                            onAdd={async () => { }}
-                            onDelete={async () => { }}
+                            onAdd={handleAddPaymentMethod}
+                            onDelete={handleDeletePaymentMethod}
                             onSetDefault={handlePaymentSelect}
                         />
                     </div>

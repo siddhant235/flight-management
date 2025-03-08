@@ -39,7 +39,7 @@ export default function ProfilePage() {
         try {
             const newPaymentMethod: PaymentMethod = {
                 id: crypto.randomUUID(),
-                type: 'credit_card' as const,
+                type: 'CREDIT_CARD' as const,
                 card_number: data.card_number,
                 card_holder_name: data.card_holder_name,
                 expiry_date: data.expiry_date,

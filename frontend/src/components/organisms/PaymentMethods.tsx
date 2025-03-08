@@ -142,38 +142,39 @@ export function PaymentMethods({
                 {paymentMethods.map((method) => (
                     <div
                         key={method.id}
-                        className="flex items-center justify-between border rounded-lg p-4"
+                        className={`flex items-center justify-between border rounded-lg p-4 cursor-pointer transition-all hover:border-blue-500 dark:hover:border-blue-400 ${method.is_default ? 'border-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'hover:shadow-md'}`}
+                        onClick={() => onSetDefault(method.id)}
                     >
-                        <div>
-                            <div className="font-medium">
-                                {method.card_holder_name}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                                {method.card_number.slice(-4).padStart(method.card_number.length, '*')}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                                Expires {method.expiry_date}
+                        <div className="flex items-center space-x-4">
+                            <input
+                                type="radio"
+                                checked={method.is_default}
+                                onChange={() => onSetDefault(method.id)}
+                                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                            />
+                            <div>
+                                <div className="font-medium">
+                                    {method.card_holder_name}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                    {method.card_number.slice(-4).padStart(method.card_number.length, '*')}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                    Expires {method.expiry_date}
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center space-x-2">
-                            {!method.is_default && (
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    onClick={() => onSetDefault(method.id)}
-                                >
-                                    Set as Default
-                                </Button>
-                            )}
-                            <Button
-                                type="button"
-                                variant="danger"
-                                onClick={() => onDelete(method.id)}
-                            >
-                                Delete
-                            </Button>
-                        </div>
+                        <Button
+                            type="button"
+                            variant="danger"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(method.id);
+                            }}
+                        >
+                            Delete
+                        </Button>
                     </div>
                 ))}
 

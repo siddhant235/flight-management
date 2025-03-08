@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { PassengerForm } from './PassengerForm'
+import { PassengerForm } from '@/components/organisms/PassengerForm'
 import type { Passenger } from '@/types/booking'
 import { Button } from '@/components/molecules/Button'
+import { ChevronDown } from 'lucide-react'
 
 interface CollapsiblePassengerFormProps {
     index: number
@@ -36,15 +37,20 @@ export function CollapsiblePassengerForm({
                     }`}
                 onClick={() => !isEditing && setIsExpanded(!isExpanded)}
             >
-                <div>
-                    <h3 className="font-medium">
-                        {type} Passenger {index + 1}
-                    </h3>
-                    {data && !isEditing && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {data.firstName} {data.lastName}
-                        </p>
-                    )}
+                <div className="flex items-center gap-2">
+                    <ChevronDown
+                        className={`w-5 h-5 transition-transform ${isExpanded ? 'transform rotate-180' : ''}`}
+                    />
+                    <div>
+                        <h3 className="font-medium">
+                            {type} Passenger {index + 1}
+                        </h3>
+                        {data && !isEditing && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {data.firstName} {data.lastName}
+                            </p>
+                        )}
+                    </div>
                 </div>
                 {data && !isEditing && (
                     <div className="flex items-center gap-2">
