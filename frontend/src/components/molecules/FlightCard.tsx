@@ -4,7 +4,7 @@ import type { Flight } from '@/types/flight'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '@/lib/store'
 import { setOutboundFlight, setReturnFlight } from '@/lib/features/selectedFlightsSlice'
-import { formatTime, formatDate, calculateDuration } from '@/utils/dateTime'
+import { formatTime, calculateDuration } from '@/utils/dateTime'
 
 interface FlightCardProps {
     flight: Flight
@@ -61,7 +61,7 @@ export function FlightCard({ flight, type, departureDate, arrivalDate }: FlightC
                         <Text className="font-medium">{flight.departureAirport}</Text>
                         <div className="space-y-0.5">
                             <Text className="text-sm font-medium">{formatTime(flight.departureTime)}</Text>
-                            <Text className="text-xs text-gray-500">{formatDate(departureDate)}</Text>
+                            <Text className="text-xs text-gray-500">{departureDate}</Text>
                         </div>
                     </div>
 
@@ -80,7 +80,7 @@ export function FlightCard({ flight, type, departureDate, arrivalDate }: FlightC
                         <Text className="font-medium">{flight.arrivalAirport}</Text>
                         <div className="space-y-0.5">
                             <Text className="text-sm font-medium">{formatTime(flight.arrivalTime)}</Text>
-                            <Text className="text-xs text-gray-500">{formatDate(arrivalDate)}</Text>
+                            <Text className="text-xs text-gray-500">{arrivalDate}</Text>
                         </div>
                     </div>
                 </div>

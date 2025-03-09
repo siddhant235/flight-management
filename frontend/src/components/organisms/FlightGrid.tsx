@@ -1,7 +1,7 @@
+import { useSelector } from 'react-redux'
 import { FlightCard } from '@/components/molecules/FlightCard'
 import type { Flight } from '@/types/flight'
-import { useSelector } from 'react-redux'
-import { RootState } from '@/lib/store'
+import { selectSearchParams } from '@/lib/features/searchSlice'
 import { TripType } from '@/types/flight'
 
 interface FlightGridProps {
@@ -10,11 +10,11 @@ interface FlightGridProps {
 }
 
 export function FlightGrid({ outboundFlights, returnFlights }: FlightGridProps) {
-    const searchParams = useSelector((state: RootState) => state.search.searchParams)
-    const isRoundTrip = searchParams.tripType === TripType.ROUND_TRIP
-    console.log(outboundFlights, "OUTBOUNF")
+    const { tripType, departureDate, returnDate } = useSelector(selectSearchParams)
+    const isRoundTrip = tripType === TripType.ROUND_TRIP
+
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className={`grid ${isRoundTrip ? 'grid-cols-2' : 'grid-cols-1'} gap-6`}>
             <div>
                 <h3 className="text-xl font-semibold mb-4">Outbound Flights</h3>
                 <div className="space-y-4">
@@ -23,26 +23,29 @@ export function FlightGrid({ outboundFlights, returnFlights }: FlightGridProps) 
                             key={flight.id}
                             flight={flight}
                             type="outbound"
-                            departureDate={searchParams.departureDate}
-                            arrivalDate={searchParams.departureDate}
+                            departureDate={departureDate}
+                            arrivalDate={departureDate}
                         />
                     ))}
                 </div>
             </div>
+
             {isRoundTrip && (
                 <div>
                     <h3 className="text-xl font-semibold mb-4">Return Flights</h3>
-                    <div className="space-y-4">
-                        {returnFlights.map((flight) => (
-                            <FlightCard
-                                key={flight.id}
-                                flight={flight}
-                                type="return"
-                                departureDate={searchParams.returnDate}
-                                arrivalDate={searchParams.returnDate}
-                            />
-                        ))}
-                    </div>
+                    {returnFlights.length > 0 && (
+                        <div className="space-y-4">
+                            {returnFlights.map((flight) => (
+                                <FlightCard
+                                    key={flight.id}
+                                    flight={flight}
+                                    type="return"
+                                    departureDate={returnDate}
+                                    arrivalDate={returnDate}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
         </div>
