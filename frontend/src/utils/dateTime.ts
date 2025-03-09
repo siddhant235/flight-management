@@ -1,18 +1,10 @@
 /**
- * Format time from "HH:mm:ss" format to 12-hour format (e.g., "10:30 AM")
+ * Format time from "HH:mm:ss" format to 24-hour format (e.g., "10:30")
  */
 export const formatTime = (time: string) => {
     // Handle time-only format (HH:mm:ss)
     const [hours, minutes] = time.split(':');
-    const date = new Date();
-    date.setHours(parseInt(hours, 10));
-    date.setMinutes(parseInt(minutes, 10));
-
-    return date.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-    }).replace(/^0/, ''); // Remove leading zero
+    return `${hours}:${minutes}`;
 };
 
 /**
@@ -50,4 +42,24 @@ export const calculateDuration = (departureTime: string, arrivalTime: string) =>
     const minutes = durationInMinutes % 60;
 
     return `${hours}h ${minutes}m`;
-}; 
+};
+
+export const calculateArrivalDate = (departureDate: string, departureTime: string, arrivalTime: string): string => {
+    // Convert departureDate into a Date object
+    const departureDateTime = new Date(`${departureDate}T${departureTime}`);
+
+    // Convert arrivalTime into a Date object (same date initially)
+    const arrivalDateTime = new Date(`${departureDate}T${arrivalTime}`);
+
+    // If arrival time is earlier than departure time, it means the flight crosses midnight
+    if (arrivalDateTime < departureDateTime) {
+        arrivalDateTime.setDate(arrivalDateTime.getDate() + 1); // Move to next day
+    }
+
+    // Format the date in YYYY-MM-DD format using local timezone
+    const year = arrivalDateTime.getFullYear();
+    const month = String(arrivalDateTime.getMonth() + 1).padStart(2, '0');
+    const day = String(arrivalDateTime.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}

@@ -38,25 +38,47 @@ const SearchResults = ({ searchResults }: SearchResultsProps) => {
 }
 
 const SearchSummary = ({ params }: { params: FlightSearchFormData }) => {
+    const totalPassengers = params.passengers.adults + params.passengers.children + params.passengers.infants;
+    const passengerDetails = [
+        params.passengers.adults && `${params.passengers.adults} Adult${params.passengers.adults > 1 ? 's' : ''}`,
+        params.passengers.children && `${params.passengers.children} Child${params.passengers.children > 1 ? 'ren' : ''}`,
+        params.passengers.infants && `${params.passengers.infants} Infant${params.passengers.infants > 1 ? 's' : ''}`
+    ].filter(Boolean).join(', ');
+
     return (
-        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <span className="font-semibold">{params.origin}</span>
-                    <span>→</span>
-                    <span className="font-semibold">{params.destination}</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    <div>
-                        <span className="text-sm text-gray-600 dark:text-gray-400">Departure: </span>
-                        <span className="font-semibold">{params.departureDate}</span>
-                    </div>
-                    {params.returnDate && (
-                        <div>
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Return: </span>
-                            <span className="font-semibold">{params.returnDate}</span>
+        <div className="bg-gray-50 dark:bg-gray-800 p-3 sm:p-4 rounded-lg shadow-sm">
+            <div className="flex flex-col gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 text-sm sm:text-base">
+                            <span className="font-semibold truncate max-w-[100px] sm:max-w-none">{params.origin}</span>
+                            <span className="text-gray-400">→</span>
+                            <span className="font-semibold truncate max-w-[100px] sm:max-w-none">{params.destination}</span>
                         </div>
-                    )}
+                    </div>
+                    <div className="flex flex-wrap gap-2 sm:gap-4 text-sm sm:text-base">
+                        <div className="flex items-center gap-1">
+                            <span className="text-gray-600 dark:text-gray-400">Departure:</span>
+                            <span className="font-medium">{params.departureDate}</span>
+                        </div>
+                        {params.returnDate && (
+                            <div className="flex items-center gap-1">
+                                <span className="text-gray-600 dark:text-gray-400">Return:</span>
+                                <span className="font-medium">{params.returnDate}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm border-t border-gray-200 dark:border-gray-700 pt-2">
+                    <div className="flex items-center gap-1">
+                        <span className="text-gray-600 dark:text-gray-400">Class:</span>
+                        <span className="font-medium capitalize">{params.seatClass.toLowerCase()}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <span className="text-gray-600 dark:text-gray-400">Passengers:</span>
+                        <span className="font-medium">{totalPassengers}</span>
+                        <span className="text-gray-500 text-xs">({passengerDetails})</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -78,7 +100,7 @@ export function HomeContent() {
         isSearching,
         handleSearch
     } = useFlightSearch()
-
+    console.log(searchResults, "searchResults")
     // Handle initialization and search
     useEffect(() => {
         if (!isInitialized && searchParams.origin && searchParams.destination && searchParams.departureDate) {
@@ -114,10 +136,10 @@ export function HomeContent() {
     ), [searchParams, handleSearchSubmit])
 
     return (
-        <main className="container mx-auto px-4 py-8 min-h-screen dark:bg-gray-900 pb-24">
+        <main className="container mx-auto px-4 py-8 min-h-screen dark:bg-gray-900">
             <div className="max-w-7xl mx-auto">
-                <div className="relative space-y-4">
-                    <div className="flex items-center justify-between">
+                <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 pb-4">
+                    <div className="flex items-center justify-between mb-4">
                         <Title className="text-3xl">Search Flights</Title>
                         {(hasResults || hasValidParams) && (
                             <button
@@ -153,7 +175,9 @@ export function HomeContent() {
                             )}
                         </div>
                     </div>
+                </div>
 
+                <div className="mt-4">
                     {isSearching && (
                         <div className="flex justify-center items-center py-12">
                             <Spinner />

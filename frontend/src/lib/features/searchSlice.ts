@@ -4,14 +4,15 @@ import { searchService } from '@/lib/services/searchService'
 import type { RootState } from '@/lib/store'
 import { flightApi } from '@/lib/services/flightApi'
 import type { Flight } from '@/types/flight'
+import { calculateArrivalDate } from '@/utils/dateTime'
 
 interface SearchState {
     searchParams: FlightSearchFormData
     isSearching: boolean
     error: string | null
     searchResults: {
-        outboundFlights: Flight[]
-        returnFlights: Flight[]
+        outboundFlights: (Flight & { arrivalDate: string })[]
+        returnFlights: (Flight & { arrivalDate: string })[]
     } | null
 }
 
@@ -85,9 +86,31 @@ const searchSlice = createSlice({
             state.error = null
         },
         setSearchResults: (state, action: PayloadAction<{ outboundFlights: Flight[], returnFlights: Flight[] }>) => {
-            state.searchResults = action.payload
-            state.isSearching = false
-            state.error = null
+            // Calculate arrival dates for outbound flights
+            const outboundFlights = action.payload.outboundFlights.map(flight => ({
+                ...flight,
+                arrivalDate: calculateArrivalDate(
+                    state.searchParams.departureDate,
+                    flight.departureTime,
+                    flight.arrivalTime
+                )
+            }));
+            // Calculate arrival dates for return flights
+            const returnFlights = action.payload.returnFlights.map(flight => ({
+                ...flight,
+                arrivalDate: calculateArrivalDate(
+                    state.searchParams.returnDate || '',
+                    flight.departureTime,
+                    flight.arrivalTime
+                )
+            }));
+
+            state.searchResults = {
+                outboundFlights,
+                returnFlights
+            };
+            state.isSearching = false;
+            state.error = null;
         },
         setSearchError: (state, action: PayloadAction<string>) => {
             state.error = action.payload

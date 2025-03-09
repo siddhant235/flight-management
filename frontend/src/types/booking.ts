@@ -34,15 +34,19 @@ export interface BookingPassenger {
     created_at: string
 }
 
+interface FlightBooking {
+    flightId: string;
+    seatClass: SeatClassType;
+    departureDate: string;
+    departureTime: string;
+    arrivalTime: string;
+    arrivalDate: string;
+
+}
+
 export interface CreateBookingRequest {
-    outboundFlight: {
-        flightId: string
-        seatClass: SeatClassType
-    }
-    returnFlight?: {
-        flightId: string
-        seatClass: SeatClassType
-    }
+    outboundFlight: FlightBooking;
+    returnFlight?: FlightBooking;
     passengers: Omit<Passenger, 'id'>[]
     paymentMethodId: string
     totalAmount: number

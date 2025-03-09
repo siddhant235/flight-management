@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import crypto from "crypto";
 import { SeatClassType } from "@/types/flight";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { generateETicketHTML } from "@/lib/utils/emailTemplates";
 
 interface FlightSeats {
     economy_seats: number;
@@ -14,6 +15,10 @@ interface FlightSeats {
 interface FlightBookingRequest {
     flightId: string;
     seatClass: SeatClassType;
+    departureDate: string;
+    arrivalDate: string;
+    departureTime: string;
+    arrivalTime: string;
 }
 
 interface PassengerData {
@@ -61,7 +66,13 @@ async function processFlightSeats(supabase: SupabaseClient, flight: FlightBookin
 
     if (updateError) throw updateError;
 
-    return true;
+    return {
+        flightId: flight.flightId,
+        seatColumn: selectedSeatColumn,
+        originalSeats: currentSeats,
+        newSeats,
+        passengerCount
+    };
 }
 
 async function processPassengers(supabase: SupabaseClient, passengers: PassengerData[]) {
@@ -71,23 +82,44 @@ async function processPassengers(supabase: SupabaseClient, passengers: Passenger
         passengers.map(async (passenger) => {
             const { firstName, lastName, email, phone, gender } = passenger;
 
+            // Check for existing passenger by email or phone
             const { data: existingPassenger } = await supabase
                 .from("passengers")
                 .select("id")
-                .eq("email", email)
+                .or(`email.eq.${email},phone.eq.${phone}`)
                 .single();
 
             let passenger_id = existingPassenger?.id;
 
             if (!passenger_id) {
+                // If passenger doesn't exist, create new record
                 const { data: newPassenger, error: passengerInsertError } = await supabase
                     .from("passengers")
-                    .insert([{ first_name: firstName, last_name: lastName, email, phone, gender }])
+                    .insert([{
+                        first_name: firstName,
+                        last_name: lastName,
+                        email,
+                        phone,
+                        gender
+                    }])
                     .select("id")
                     .single();
 
-                if (passengerInsertError) throw passengerInsertError;
-                passenger_id = newPassenger.id;
+                if (passengerInsertError) {
+                    // If insert fails due to race condition, try to fetch again
+                    const { data: retryPassenger } = await supabase
+                        .from("passengers")
+                        .select("id")
+                        .or(`email.eq.${email},phone.eq.${phone}`)
+                        .single();
+
+                    if (!retryPassenger) {
+                        throw passengerInsertError;
+                    }
+                    passenger_id = retryPassenger.id;
+                } else {
+                    passenger_id = newPassenger.id;
+                }
             }
 
             passengerIds[email] = passenger_id;
@@ -113,10 +145,109 @@ async function createBookingPassengers(supabase: SupabaseClient, bookingId: stri
     if (bookingPassengersError) throw bookingPassengersError;
 }
 
+async function sendETickets(
+    supabase: SupabaseClient,
+    bookingReference: string,
+    bookings: { id: string; flight: FlightBookingRequest }[],
+    passengers: PassengerData[],
+    totalAmount: number
+) {
+    try {
+        // Get flight details for each booking
+        const flightDetails = await Promise.all(
+            bookings.map(async (booking) => {
+                const { data: flight } = await supabase
+                    .from("flights")
+                    .select(`
+                        id,
+                        airline,
+                        flight_number,
+                        departure_airport,
+                        arrival_airport
+                    `)
+                    .eq("id", booking.flight.flightId)
+                    .single();
+
+                const { data: bookingPassenger } = await supabase
+                    .from("booking_passengers")
+                    .select("seat_number, seat_class")
+                    .eq("booking_id", booking.id)
+                    .single();
+
+                return {
+                    flightId: booking.flight.flightId,
+                    airlineName: flight?.airline || "Airline",
+                    airlineId: flight?.flight_number || "XX",
+                    departureDate: booking.flight.departureDate,
+                    arrivalDate: booking.flight.arrivalDate,
+                    departureTime: booking.flight.departureTime,
+                    arrivalTime: booking.flight.arrivalTime,
+                    origin: flight?.departure_airport || "",
+                    destination: flight?.arrival_airport || "",
+                    seatClass: bookingPassenger?.seat_class || "",
+                    seatNumber: bookingPassenger?.seat_number || "",
+                };
+            })
+        );
+
+        // Send e-ticket to each passenger
+        await Promise.all(
+            passengers.map(async (passenger) => {
+                const eTicketData = {
+                    bookingReference,
+                    passenger: {
+                        firstName: passenger.firstName,
+                        lastName: passenger.lastName,
+                        email: passenger.email,
+                    },
+                    flights: flightDetails,
+                    totalAmount: totalAmount / passengers.length, // Individual passenger's share
+                };
+
+                const eTicketHtml = generateETicketHTML(eTicketData);
+
+                // Use SendGrid API directly
+                const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        personalizations: [{
+                            to: [{ email: passenger.email }],
+                        }],
+                        from: {
+                            email: process.env.FROM_EMAIL || '',
+                            name: process.env.FROM_NAME || 'Flight Booking System'
+                        },
+                        subject: `Your Flight E-Ticket (Ref: ${bookingReference})`,
+                        content: [{
+                            type: 'text/html',
+                            value: eTicketHtml,
+                        }],
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('SendGrid API error:', errorData);
+                    throw new Error(`Failed to send e-ticket to ${passenger.email}`);
+                }
+            })
+        );
+    } catch (error) {
+        console.error("Error sending e-tickets:", error);
+        // Don't throw the error as this is a non-critical operation
+        // The booking is already confirmed at this point
+    }
+}
+
 export async function POST(request: Request) {
     const supabase = await createClient();
     let payment_id: string | null = null;
     const bookings: { id: string; flight: FlightBookingRequest }[] = [];
+    const seatUpdates: { flightId: string; seatColumn: string; originalSeats: number; newSeats: number; passengerCount: number }[] = [];
 
     try {
         // Step 1: Authenticate user
@@ -131,17 +262,18 @@ export async function POST(request: Request) {
             returnFlight,
             passengers,
             totalAmount,
-            transactionId, // Payment gateway transaction ID
+            transactionId,
         } = await request.json();
 
         const flights: FlightBookingRequest[] = returnFlight
             ? [outboundFlight, returnFlight]
             : [outboundFlight];
 
-        // Step 3: Process all flights concurrently
-        await Promise.all(
+        // Step 3: Process all flights concurrently and store seat updates
+        const processedSeats = await Promise.all(
             flights.map(flight => processFlightSeats(supabase, flight, passengers.length))
         );
+        seatUpdates.push(...processedSeats);
 
         // Step 4: Insert Payment (Mark as PENDING)
         const { data: payment, error: paymentError } = await supabase
@@ -166,6 +298,10 @@ export async function POST(request: Request) {
             .from("booking")
             .insert({
                 flight_id: outboundFlight.flightId,
+                departure_date: outboundFlight.departureDate,
+                arrival_date: outboundFlight.arrivalDate,
+                departure_time: outboundFlight.departureTime,
+                arrival_time: outboundFlight.arrivalTime,
                 user_id: user.id,
                 booking_reference: bookingReference,
                 booking_status: "CONFIRMED",
@@ -184,6 +320,10 @@ export async function POST(request: Request) {
                 .from("booking")
                 .insert({
                     flight_id: returnFlight.flightId,
+                    departure_date: returnFlight.departureDate,
+                    arrival_date: returnFlight.arrivalDate,
+                    departure_time: returnFlight.departureTime,
+                    arrival_time: returnFlight.arrivalTime,
                     user_id: user.id,
                     booking_reference: bookingReference, // Same reference for related bookings
                     booking_status: "CONFIRMED",
@@ -218,7 +358,16 @@ export async function POST(request: Request) {
             .update({ payment_status: "COMPLETED" })
             .eq("id", payment_id);
 
-        // Step 9: Return success response
+        // Step 9: Generate and send e-tickets
+        await sendETickets(
+            supabase,
+            bookingReference,
+            bookings,
+            passengers,
+            totalAmount
+        );
+
+        // Step 10: Return success response
         return NextResponse.json({
             message: "Booking Successful",
             bookingReference,
@@ -228,6 +377,18 @@ export async function POST(request: Request) {
 
     } catch (error) {
         console.error("Transaction Error:", error);
+
+        // Rollback: Restore original seat counts
+        if (seatUpdates.length > 0) {
+            await Promise.all(
+                seatUpdates.map(update =>
+                    supabase
+                        .from("flights")
+                        .update({ [update.seatColumn]: update.originalSeats })
+                        .eq("id", update.flightId)
+                )
+            );
+        }
 
         // Rollback: Delete bookings & payment if failed
         if (bookings?.length > 0) {
@@ -242,3 +403,4 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Transaction failed", details: error }, { status: 500 });
     }
 }
+

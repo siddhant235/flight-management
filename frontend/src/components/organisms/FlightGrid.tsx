@@ -1,8 +1,8 @@
-import { useSelector } from 'react-redux'
 import { FlightCard } from '@/components/molecules/FlightCard'
+import { Title } from '@/components/atoms/Typography'
 import type { Flight } from '@/types/flight'
+import { useSelector } from 'react-redux'
 import { selectSearchParams } from '@/lib/features/searchSlice'
-import { TripType } from '@/types/flight'
 
 interface FlightGridProps {
     outboundFlights: Flight[]
@@ -10,42 +10,43 @@ interface FlightGridProps {
 }
 
 export function FlightGrid({ outboundFlights, returnFlights }: FlightGridProps) {
-    const { tripType, departureDate, returnDate } = useSelector(selectSearchParams)
-    const isRoundTrip = tripType === TripType.ROUND_TRIP
+    const searchParams = useSelector(selectSearchParams);
 
     return (
-        <div className={`grid ${isRoundTrip ? 'grid-cols-2' : 'grid-cols-1'} gap-6`}>
-            <div>
-                <h3 className="text-xl font-semibold mb-4">Outbound Flights</h3>
-                <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4">
+            <div className="space-y-2 sm:space-y-4">
+                <Title className="text-sm sm:text-lg font-semibold truncate">
+                    {searchParams.origin} → {searchParams.destination}
+                </Title>
+                <div className="grid gap-2 sm:gap-4">
                     {outboundFlights.map((flight) => (
                         <FlightCard
                             key={flight.id}
                             flight={flight}
                             type="outbound"
-                            departureDate={departureDate}
-                            arrivalDate={departureDate}
+                            departureDate={searchParams.departureDate}
+                            arrivalDate={searchParams.departureDate}
                         />
                     ))}
                 </div>
             </div>
 
-            {isRoundTrip && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-4">Return Flights</h3>
-                    {returnFlights.length > 0 && (
-                        <div className="space-y-4">
-                            {returnFlights.map((flight) => (
-                                <FlightCard
-                                    key={flight.id}
-                                    flight={flight}
-                                    type="return"
-                                    departureDate={returnDate}
-                                    arrivalDate={returnDate}
-                                />
-                            ))}
-                        </div>
-                    )}
+            {returnFlights.length > 0 && (
+                <div className="space-y-2 sm:space-y-4">
+                    <Title className="text-sm sm:text-lg font-semibold truncate">
+                        {searchParams.destination} → {searchParams.origin}
+                    </Title>
+                    <div className="grid gap-2 sm:gap-4">
+                        {returnFlights.map((flight) => (
+                            <FlightCard
+                                key={flight.id}
+                                flight={flight}
+                                type="return"
+                                departureDate={searchParams.returnDate || ''}
+                                arrivalDate={searchParams.returnDate || ''}
+                            />
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
