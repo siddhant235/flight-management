@@ -1,10 +1,10 @@
 import { useSelector } from 'react-redux'
 import { useRouter } from 'next/navigation'
 import { RootState } from '@/lib/store'
-import { Button } from '@/components/atoms/Button'
 import { Text } from '@/components/atoms/Typography'
 import { TripType } from '@/types/flight'
 import { selectSearchParams } from '@/lib/features/searchSlice'
+import { Button } from './Button'
 
 export function BookingSummary() {
     const router = useRouter()

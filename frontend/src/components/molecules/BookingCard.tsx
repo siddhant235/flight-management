@@ -8,16 +8,18 @@ import {
     ArrowLongRightIcon,
     TicketIcon,
     BanknotesIcon,
-    MapPinIcon
+    MapPinIcon,
+    ExclamationCircleIcon
 } from '@heroicons/react/24/outline';
 import { formatCurrency } from '@/lib/utils/utils';
 import { Booking } from '@/types/booking';
+import { useBookingStatus } from '@/lib/hooks/useBookingStatus';
 
 interface BookingCardProps {
     booking: Booking;
 }
 
-const BookingStatusBadge = ({ status }: { status: string }) => {
+const BookingStatusBadge = ({ status, error }: { status: string; error?: Error | null }) => {
     const getStatusConfig = (status: string) => {
         switch (status.toLowerCase()) {
             case 'confirmed':
@@ -31,6 +33,15 @@ const BookingStatusBadge = ({ status }: { status: string }) => {
         }
     };
 
+    if (error) {
+        return (
+            <Badge className="bg-red-100 text-red-600 px-3 py-1 flex items-center gap-1">
+                <ExclamationCircleIcon className="h-4 w-4" />
+                <span>Status Error</span>
+            </Badge>
+        );
+    }
+
     const config = getStatusConfig(status);
     return (
         <Badge className={`${config.color} text-white px-3 py-1 ring-2 ${config.ringColor} ring-offset-2`}>
@@ -41,6 +52,8 @@ const BookingStatusBadge = ({ status }: { status: string }) => {
 };
 
 export const BookingCard = ({ booking }: BookingCardProps) => {
+    const { status, error } = useBookingStatus(booking.id, booking.booking_status);
+
     return (
         <Card className="w-full p-6 hover:shadow-lg transition-all duration-200 hover:scale-[1.01] cursor-pointer">
             {/* Header Section */}
@@ -59,7 +72,7 @@ export const BookingCard = ({ booking }: BookingCardProps) => {
                         <span>Booked on {format(new Date(booking.created_at), 'PPP')}</span>
                     </div>
                 </div>
-                <BookingStatusBadge status={booking.booking_status} />
+                <BookingStatusBadge status={status} error={error} />
             </div>
 
             {/* Flight Details Section */}

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { Card } from '@/components/atoms/Card';
-import { Button } from '@/components/atoms/Button';
+import { Button } from '@/components/molecules/Button';
 
 export default function BookingsError({
     error,
