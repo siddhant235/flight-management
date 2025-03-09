@@ -104,7 +104,6 @@ export async function POST(request: Request) {
             outboundFlights: transformFlightData(outboundFlights as unknown as DatabaseFlight[], searchParams.seatClass),
             returnFlights: returnFlights ? transformFlightData(returnFlights as unknown as DatabaseFlight[], searchParams.seatClass) : []
         };
-        console.log(response, "RESPONSE")
         return NextResponse.json(response);
     } catch (error) {
         console.error('Unexpected error:', error);

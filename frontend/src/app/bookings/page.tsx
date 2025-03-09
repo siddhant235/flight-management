@@ -15,7 +15,7 @@ const EmptyState = () => (
 
 function BookingsList() {
     const { data } = useGetUserBookingsQuery();
-
+    console.log('data', data);
     return (
         <div className="space-y-4">
             {data?.bookings.map((booking: Booking) => (

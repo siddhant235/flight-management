@@ -20,6 +20,9 @@ export interface BookingPassengerResponse {
     seat_number: string;
     first_name: string;
     last_name: string;
+    email: string;
+    phone: string;
+    gender: Gender;
 }
 export interface Flight {
     id: string;

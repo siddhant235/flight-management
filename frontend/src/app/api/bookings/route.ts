@@ -92,7 +92,8 @@ export async function GET() {
                     )
                 )
             `)
-            .eq("booking.user_id", user.id);
+            .eq("booking.user_id", user.id)
+            .order('created_at', { ascending: false });
 
         if (bookingsError) {
             throw bookingsError;

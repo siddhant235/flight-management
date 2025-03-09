@@ -7,6 +7,10 @@ interface BookingsResponse {
     bookings: Booking[];
 }
 
+interface BookingDetailsResponse {
+    booking: Booking;
+}
+
 export const subscribeToBookingStatus = (bookingId: string, onStatusChange: (status: string) => void) => {
     const supabase = createClient();
 
@@ -80,6 +84,48 @@ export const bookingApi = baseApi.injectEndpoints({
                 }
             }
         }),
+        getBookingById: builder.query<BookingDetailsResponse, string>({
+            query: (bookingId) => `bookings/${bookingId}`,
+            providesTags: (_result, _error, bookingId) => [{ type: ApiTagTypes.BOOKINGS, id: bookingId }],
+            async onCacheEntryAdded(
+                bookingId,
+                { updateCachedData, cacheDataLoaded, cacheEntryRemoved }
+            ) {
+                try {
+                    await cacheDataLoaded;
+                    const supabase = createClient();
+
+                    // Subscribe to specific booking updates
+                    const channel = supabase
+                        .channel(`booking_details_${bookingId}`)
+                        .on(
+                            'postgres_changes',
+                            {
+                                event: 'UPDATE',
+                                schema: 'public',
+                                table: 'booking',
+                                filter: `id=eq.${bookingId}`
+                            },
+                            (payload) => {
+                                updateCachedData((draft) => {
+                                    // Update only the changed fields
+                                    draft.booking = {
+                                        ...draft.booking,
+                                        ...payload.new
+                                    };
+                                });
+                            }
+                        )
+                        .subscribe();
+
+                    // Cleanup subscription when cache entry is removed
+                    await cacheEntryRemoved;
+                    channel.unsubscribe();
+                } catch (error) {
+                    console.error('Error in booking details subscription:', error);
+                }
+            }
+        }),
         createBooking: builder.mutation<{ message: string; bookingReference: string; booking: Booking }, CreateBookingRequest>({
             query: (body) => ({
                 url: 'bookings/confirm',
@@ -88,10 +134,22 @@ export const bookingApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: [ApiTagTypes.BOOKINGS],
         }),
+        cancelBooking: builder.mutation<{ message: string }, string>({
+            query: (bookingId) => ({
+                url: `bookings/${bookingId}/cancel`,
+                method: 'POST',
+            }),
+            invalidatesTags: (_result, _error, bookingId) => [
+                { type: ApiTagTypes.BOOKINGS },
+                { type: ApiTagTypes.BOOKINGS, id: bookingId }
+            ],
+        }),
     }),
 });
 
 export const {
     useGetUserBookingsQuery,
+    useGetBookingByIdQuery,
     useCreateBookingMutation,
+    useCancelBookingMutation,
 } = bookingApi; 

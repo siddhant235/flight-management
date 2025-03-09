@@ -190,7 +190,9 @@ export function HomeContent() {
                         </div>
                     )}
 
-                    <SearchResults searchResults={searchResults} />
+                    <div className="pb-24">
+                        <SearchResults searchResults={searchResults} />
+                    </div>
 
                     {searchResults && <BookingSummary />}
                 </div>
