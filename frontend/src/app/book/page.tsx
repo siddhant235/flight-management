@@ -15,7 +15,7 @@ import { SeatClassType } from '@/types/flight'
 import { toast, Toaster } from 'sonner'
 import { PassengerStep } from '@/components/organisms/BookingSteps/PassengerStep'
 import { PaymentStep } from '@/components/organisms/BookingSteps/PaymentStep'
-import { ConfirmStep } from '@/components/organisms/BookingSteps/ConfirmStep'
+import { ConfirmStep, PassengerData } from '@/components/organisms/BookingSteps/ConfirmStep'
 
 function BookingContent() {
     const router = useRouter()
@@ -212,7 +212,7 @@ function BookingContent() {
                     flights={flights}
                     returnFlight={returnFlight}
                     searchFormData={searchFormData}
-                    passengerData={passengerData}
+                    passengerData={passengerData as unknown as PassengerData[]}
                     paymentMethod={profile?.payment_methods.find(pm => pm.id === selectedPaymentMethodId) || null}
                     onBack={() => setStep('payment')}
                     onConfirm={handleConfirmBooking}

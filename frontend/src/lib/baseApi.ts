@@ -30,7 +30,7 @@ const baseQueryWithErrorHandling: BaseQueryFn<
     const { data: { session } } = await supabase.auth.getSession()
 
     const baseQuery = fetchBaseQuery({
-        baseUrl: '/',
+        baseUrl: '/api',
         credentials: 'include',
         prepareHeaders: (headers) => {
             if (session?.access_token) {
@@ -70,6 +70,8 @@ export const baseApi = createApi({
     baseQuery: baseQueryWithErrorHandling,
     endpoints: () => ({}),
     tagTypes: Object.values(ApiTagTypes),
+    refetchOnReconnect: true,
+    refetchOnMountOrArgChange: true
 })
 
 export type ApiEndpointBuilder = EndpointBuilder<

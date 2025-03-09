@@ -12,7 +12,7 @@ const profileSchema = z.object({
     age: z.number().min(18, 'You must be at least 18 years old').optional(),
     phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number').optional(),
     address: z.string().min(5, 'Address must be at least 5 characters').optional(),
-    gender: z.enum(['male', 'female', 'other'] as const).optional(),
+    gender: z.enum(['MALE', 'FEMALE', 'OTHER'] as const).optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -76,9 +76,9 @@ export const ProfileForm = ({ profile, onSubmit, isLoading = false }: ProfileFor
                             disabled={isLoading}
                         >
                             <option value="">Select gender</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="other">Other</option>
+                            <option value="MALE">Male</option>
+                            <option value="FEMALE">Female</option>
+                            <option value="OTHER">Other</option>
                         </select>
                         {errors.gender && (
                             <p className="mt-1.5 text-sm text-red-600">

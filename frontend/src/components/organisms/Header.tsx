@@ -27,7 +27,7 @@ export const Header = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16 items-center">
                     <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
-                        Flight Management
+                        Thena Airlines
                     </Link>
 
                     <nav className="flex items-center space-x-4">
@@ -35,6 +35,15 @@ export const Header = () => {
                             <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
                         ) : user ? (
                             <>
+                                <Link
+                                    href="/bookings"
+                                    className={`text-sm font-medium ${pathname === '/bookings'
+                                        ? 'text-blue-600 dark:text-blue-400'
+                                        : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
+                                        }`}
+                                >
+                                    Bookings
+                                </Link>
                                 <Link
                                     href="/profile"
                                     className={`text-sm font-medium ${pathname === '/profile'

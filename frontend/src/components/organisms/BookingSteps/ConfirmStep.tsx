@@ -1,14 +1,21 @@
 import { Button } from '@/components/molecules/Button'
 import type { Flight, FlightSearchFormData } from '@/types/flight'
-import type { Passenger } from '@/types/booking'
 import type { PaymentMethod } from '@/types/payment'
 import { CURRENCY } from '@/lib/constants/currency'
+
+export interface PassengerData {
+    firstName: string;
+    lastName: string;
+    age: number;
+    email: string;
+    phone: string;
+}
 
 interface ConfirmStepProps {
     flights: Flight
     returnFlight?: Flight
     searchFormData: FlightSearchFormData
-    passengerData: (Omit<Passenger, 'id'> | undefined)[]
+    passengerData: PassengerData[]
     paymentMethod: PaymentMethod | null
     onBack: () => void
     onConfirm: () => void

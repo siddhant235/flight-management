@@ -10,22 +10,22 @@ interface SearchResponse {
 export const flightApi = baseApi.injectEndpoints({
     endpoints: (builder: ApiEndpointBuilder) => ({
         getFlights: builder.query<Flight[], void>({
-            query: () => 'api/flights',
+            query: () => 'flights',
             providesTags: [{ type: ApiTagTypes.FLIGHTS }],
         }),
         searchFlights: builder.mutation<SearchResponse, FlightSearchParams>({
             query: (params) => ({
-                url: 'api/flights/search',
+                url: 'flights/search',
                 method: 'POST',
                 body: params,
             }),
         }),
         getFlightById: builder.query<Flight, { id: string, seatClass: SeatClassType }>({
-            query: ({ id, seatClass }) => `api/flights/${id}?seatClass=${seatClass}`,
+            query: ({ id, seatClass }) => `flights/${id}?seatClass=${seatClass}`,
         }),
         bookFlight: builder.mutation<Booking, { flightId: string; passengers: number }>({
             query: (data) => ({
-                url: 'api/flights/book',
+                url: 'flights/book',
                 method: 'POST',
                 body: data,
             }),

@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from '../lib/providers';
 import { Header } from '@/components/organisms/Header';
 import { AuthProvider } from '@/components/providers/AuthProvider';
+import NextTopLoader from 'nextjs-toploader';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Flight Management",
+  title: "Thena Airlines",
   description: "Book and manage your flights",
   icons: {
     icon: '/favicon.ico',
@@ -31,6 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <NextTopLoader showSpinner={false} />
         <Providers>
           <AuthProvider>
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

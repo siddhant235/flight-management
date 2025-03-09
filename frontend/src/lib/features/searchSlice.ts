@@ -4,7 +4,7 @@ import { searchService } from '@/lib/services/searchService'
 import type { RootState } from '@/lib/store'
 import { flightApi } from '@/lib/services/flightApi'
 import type { Flight } from '@/types/flight'
-import { calculateArrivalDate } from '@/utils/dateTime'
+import { calculateArrivalDate } from '@/lib/utils/dateTime'
 
 interface SearchState {
     searchParams: FlightSearchFormData

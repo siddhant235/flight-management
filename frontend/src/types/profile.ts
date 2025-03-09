@@ -1,6 +1,6 @@
 import type { PaymentMethod } from './payment'
 
-export type Gender = 'male' | 'female' | 'other';
+export type Gender = "MALE" | "FEMALE" | "OTHER";
 
 export interface Profile {
     id: string;

@@ -4,13 +4,15 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Input, Select } from '@/components/atoms/FormElements'
 import { Button } from '@/components/molecules/Button'
-import type { Passenger } from '@/types/booking'
 import { passengerSchema, Gender } from '@/lib/validations/passengerSchema'
+import type { z } from 'zod'
+
+type FormPassenger = z.infer<typeof passengerSchema>
 
 interface PassengerFormProps {
-    onSubmit: (data: Omit<Passenger, 'id'>) => void
+    onSubmit: (data: FormPassenger) => void
     isLoading?: boolean
-    initialData?: Omit<Passenger, 'id'>
+    initialData?: FormPassenger
 }
 
 const GENDER_OPTIONS = Object.values(Gender).map(value => ({
@@ -23,7 +25,7 @@ export function PassengerForm({ onSubmit, isLoading, initialData }: PassengerFor
         register,
         handleSubmit,
         formState: { errors }
-    } = useForm<Omit<Passenger, 'id'>>({
+    } = useForm<FormPassenger>({
         resolver: zodResolver(passengerSchema),
         defaultValues: initialData
     })

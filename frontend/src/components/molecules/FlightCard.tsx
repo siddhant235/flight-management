@@ -4,7 +4,7 @@ import type { Flight } from '@/types/flight'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '@/lib/store'
 import { setOutboundFlight, setReturnFlight } from '@/lib/features/selectedFlightsSlice'
-import { formatTime, calculateDuration } from '@/utils/dateTime'
+import { formatTime, calculateDuration } from '@/lib/utils/dateTime'
 
 interface FlightCardProps {
     flight: Flight

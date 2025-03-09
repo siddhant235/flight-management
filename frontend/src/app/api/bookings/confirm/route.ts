@@ -5,13 +5,6 @@ import { SeatClassType } from "@/types/flight";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { generateETicketHTML } from "@/lib/utils/emailTemplates";
 
-interface FlightSeats {
-    economy_seats: number;
-    premium_economy_seats: number;
-    business_seats: number;
-    first_class_seats: number;
-}
-
 interface FlightBookingRequest {
     flightId: string;
     seatClass: SeatClassType;
@@ -28,52 +21,31 @@ interface PassengerData {
     phone: string;
     gender: string;
 }
+const seatClassColumnMap = {
+    [SeatClassType.ECONOMY]: "economy",
+    [SeatClassType.PREMIUM_ECONOMY]: "premium_economy",
+    [SeatClassType.BUSINESS]: "business",
+    [SeatClassType.FIRST]: "first_class",
+} as const;
 
 async function processFlightSeats(supabase: SupabaseClient, flight: FlightBookingRequest, passengerCount: number) {
-    const seatClassColumnMap = {
-        [SeatClassType.ECONOMY]: "economy_seats",
-        [SeatClassType.PREMIUM_ECONOMY]: "premium_economy_seats",
-        [SeatClassType.BUSINESS]: "business_seats",
-        [SeatClassType.FIRST]: "first_class_seats",
-    } as const;
-
-    const selectedSeatColumn = seatClassColumnMap[flight.seatClass];
-    if (!selectedSeatColumn) {
-        throw new Error("Invalid seat class selection");
-    }
-
-    const { data: flightData, error: flightError } = await supabase
-        .from("flights")
-        .select(selectedSeatColumn)
-        .eq("id", flight.flightId)
-        .single();
-
-    if (flightError || !flightData) {
-        throw new Error(`Flight not found: ${flight.flightId}`);
-    }
-
-    const currentSeats = (flightData as FlightSeats)[selectedSeatColumn];
-    const newSeats = currentSeats - passengerCount;
-
-    if (newSeats < 0) {
+    const { data, error } = await supabase.rpc("book_flight_seat", {
+        flight_id: flight.flightId,
+        seat_class: seatClassColumnMap[flight.seatClass].toUpperCase(),
+        passenger_count: passengerCount
+    });
+    console.log("FLIGHT DATA FROM BOOKING", data, flight, seatClassColumnMap[flight.seatClass])
+    if (error || !data) {
         throw new Error(`Not enough ${flight.seatClass} seats available for flight ${flight.flightId}`);
     }
 
-    const { error: updateError } = await supabase
-        .from("flights")
-        .update({ [selectedSeatColumn]: newSeats })
-        .eq("id", flight.flightId);
-
-    if (updateError) throw updateError;
-
     return {
         flightId: flight.flightId,
-        seatColumn: selectedSeatColumn,
-        originalSeats: currentSeats,
-        newSeats,
+        seatClass: flight.seatClass,
         passengerCount
     };
 }
+
 
 async function processPassengers(supabase: SupabaseClient, passengers: PassengerData[]) {
     const passengerIds: { [email: string]: string } = {};
@@ -128,16 +100,22 @@ async function processPassengers(supabase: SupabaseClient, passengers: Passenger
 
     return passengerIds;
 }
-
+// const rollBackSeats = async (supabase: SupabaseClient, flight: FlightBookingRequest, passengerCount: number) => {
+//     const seatUpdates: { flightId: string; seatColumn: string; originalSeats: number; newSeats: number; passengerCount: number }[] = [];
+//     const processedSeats = await getFlightSeats(supabase, flight, passengerCount);
+//     seatUpdates.push(processedSeats);
+//     return seatUpdates;
+// }
 async function createBookingPassengers(supabase: SupabaseClient, bookingId: string, flights: FlightBookingRequest[], passengers: PassengerData[], passengerIds: { [email: string]: string }) {
     const bookingPassengersData = flights.flatMap(flight =>
         passengers.map(passenger => ({
             booking_id: bookingId,
             passenger_id: passengerIds[passenger.email],
-            seat_class: flight.seatClass.toUpperCase(),
+            seat_class: seatClassColumnMap[flight.seatClass].toUpperCase(),
             seat_number: `${flight.seatClass.charAt(0)}${Math.floor(Math.random() * 30) + 1}`,
         }))
     );
+    console.log("BOOKING PASSENGERS DATA", bookingPassengersData)
     const { error: bookingPassengersError } = await supabase
         .from("booking_passengers")
         .insert(bookingPassengersData);
@@ -247,7 +225,7 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     let payment_id: string | null = null;
     const bookings: { id: string; flight: FlightBookingRequest }[] = [];
-    const seatUpdates: { flightId: string; seatColumn: string; originalSeats: number; newSeats: number; passengerCount: number }[] = [];
+
 
     try {
         // Step 1: Authenticate user
@@ -270,11 +248,9 @@ export async function POST(request: Request) {
             : [outboundFlight];
 
         // Step 3: Process all flights concurrently and store seat updates
-        const processedSeats = await Promise.all(
+        await Promise.all(
             flights.map(flight => processFlightSeats(supabase, flight, passengers.length))
         );
-        seatUpdates.push(...processedSeats);
-
         // Step 4: Insert Payment (Mark as PENDING)
         const { data: payment, error: paymentError } = await supabase
             .from("payments")
@@ -377,19 +353,6 @@ export async function POST(request: Request) {
 
     } catch (error) {
         console.error("Transaction Error:", error);
-
-        // Rollback: Restore original seat counts
-        if (seatUpdates.length > 0) {
-            await Promise.all(
-                seatUpdates.map(update =>
-                    supabase
-                        .from("flights")
-                        .update({ [update.seatColumn]: update.originalSeats })
-                        .eq("id", update.flightId)
-                )
-            );
-        }
-
         // Rollback: Delete bookings & payment if failed
         if (bookings?.length > 0) {
             await Promise.all(
