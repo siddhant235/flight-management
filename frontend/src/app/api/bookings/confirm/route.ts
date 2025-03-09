@@ -331,7 +331,7 @@ export async function POST(request: Request) {
         // Step 8: Update Payment to "COMPLETED"
         await supabase
             .from("payments")
-            .update({ payment_status: "COMPLETED" })
+            .update({ payment_status: "COMPLETED", booking_id: bookings[0].id })
             .eq("id", payment_id);
 
         // Step 9: Generate and send e-tickets

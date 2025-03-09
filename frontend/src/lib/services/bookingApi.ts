@@ -3,43 +3,6 @@ import { ApiTagTypes } from '../constants/apiTags';
 import type { CreateBookingRequest, Booking } from '@/types/booking';
 import { createClient } from '@/lib/supabase/client';
 
-// interface Passenger {
-//     id: string;
-//     first_name: string;
-//     last_name: string;
-//     email: string;
-//     phone: string;
-//     gender: string;
-//     seat_class: string;
-//     seat_number: string;
-// }
-
-// interface Flight {
-//     id: string;
-//     airline: string;
-//     flight_number: string;
-//     departure_airport: string;
-//     arrival_airport: string;
-//     economy_price: number;
-//     premium_economy_price: number;
-//     business_price: number;
-//     first_class_price: number;
-// }
-
-// interface BookingDetails {
-//     id: string;
-//     booking_reference: string;
-//     booking_status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
-//     total_amount: number;
-//     departure_date: string;
-//     departure_time: string;
-//     arrival_date: string;
-//     arrival_time: string;
-//     created_at: string;
-//     flights: Flight;
-//     passengers: Passenger[];
-// }
-
 interface BookingsResponse {
     bookings: Booking[];
 }
