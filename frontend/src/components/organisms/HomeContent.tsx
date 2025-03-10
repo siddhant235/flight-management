@@ -138,7 +138,7 @@ export function HomeContent() {
     return (
         <main className="container mx-auto px-4 py-8 min-h-screen dark:bg-gray-900">
             <div className="max-w-7xl mx-auto">
-                <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 pb-4">
+                <div className="z-10 bg-white dark:bg-gray-900 pb-4">
                     <div className="flex items-center justify-between mb-4">
                         <Title className="text-3xl">Search Flights</Title>
                         {(hasResults || hasValidParams) && (
