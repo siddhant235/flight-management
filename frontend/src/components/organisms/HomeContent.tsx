@@ -132,8 +132,9 @@ export function HomeContent() {
             key={`${searchParams.origin}-${searchParams.destination}-${searchParams.departureDate}`}
             onSearch={handleSearchSubmit}
             initialData={searchParams}
+            isLoading={isSearching}
         />
-    ), [searchParams, handleSearchSubmit])
+    ), [searchParams, handleSearchSubmit, isSearching])
 
     return (
         <main className="container mx-auto px-4 py-8 min-h-screen dark:bg-gray-900">

@@ -13,7 +13,7 @@ export function FlightGrid({ outboundFlights, returnFlights }: FlightGridProps) 
     const searchParams = useSelector(selectSearchParams);
 
     return (
-        <div className="grid grid-cols-2 gap-2 sm:gap-4">
+        <div className={`grid ${returnFlights.length > 0 ? 'grid-cols-2' : 'grid-cols-1'} gap-2 sm:gap-4`}>
             <div className="space-y-2 sm:space-y-4">
                 <Title className="text-sm sm:text-lg font-semibold truncate">
                     {searchParams.origin} → {searchParams.destination}
